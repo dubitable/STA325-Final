@@ -1,0 +1,20 @@
+---
+title: "explore"
+output: pdf_document
+---
+
+```{r}
+library(MASS)
+```
+
+
+```{r}
+diabetes <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
+diabetes$Diabetes_012 = as.factor(diabetes$Diabetes_012)
+head(diabetes)
+```
+
+```{r}
+polr(Diabetes_012 ~ ., data = diabetes)
+```
+
