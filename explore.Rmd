@@ -13,16 +13,15 @@ source("cleandata.R")
 source("confusionmatrix.R")
 ```
 
-
 ```{r}
 diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
 diabetes <- cleandata(diabetes_raw)
 head(diabetes)
 ```
+
 ```{r}
 diabetes |> count(Diabetes_012)
 ```
-
 
 ```{r}
 set.seed(123)
@@ -31,7 +30,6 @@ train_index <- createDataPartition(diabetes$Diabetes_012, p = 0.8, list = FALSE)
 train <- diabetes[train_index, ]
 test  <- diabetes[-train_index, ]
 ```
-
 
 ```{r}
 class_freq <- table(train$Diabetes_012)
@@ -48,18 +46,17 @@ model_polr <- polr(
 
 summary(model_polr)
 ```
+
 ```{r}
 summary(obs_weights)
 tapply(obs_weights, train$Diabetes_012, mean)
 ```
-
 
 ```{r}
 coefs <- coef(summary(model_polr))
 pvals <- pnorm(abs(coefs[, "t value"]), lower.tail = FALSE) * 2
 cbind(coefs, "p value" = pvals)
 ```
-
 
 ```{r}
 pred <- predict(model_polr, newdata = test, type = "probs")
@@ -87,7 +84,6 @@ legend("bottomright",
 auc(roc_no); auc(roc_pre); auc(roc_dia)
 ```
 
-
 ```{r}
 target <- 0.9
 avail <- roc_pre$sensitivities
@@ -105,4 +101,3 @@ t_diab <- 0.5
 cm <- create_cm(pred_df, t_pre, t_diab, test)
 plot_cm(cm)
 ```
-
