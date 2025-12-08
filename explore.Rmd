@@ -5,16 +5,105 @@ output: pdf_document
 
 ```{r}
 library(MASS)
+library(e1071)
+library(car)
+library(caret)
+library(pROC)
+source("cleandata.R")
+source("confusionmatrix.R")
 ```
 
 
 ```{r}
-diabetes <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
-diabetes$Diabetes_012 = as.factor(diabetes$Diabetes_012)
+diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
+diabetes <- cleandata(diabetes_raw)
 head(diabetes)
 ```
+```{r}
+diabetes |> count(Diabetes_012)
+```
+
 
 ```{r}
-polr(Diabetes_012 ~ ., data = diabetes)
+set.seed(123)
+
+train_index <- createDataPartition(diabetes$Diabetes_012, p = 0.8, list = FALSE)
+train <- diabetes[train_index, ]
+test  <- diabetes[-train_index, ]
+```
+
+
+```{r}
+class_freq <- table(train$Diabetes_012)
+class_wt <- max(class_freq) / class_freq
+obs_weights <- as.numeric(unname(class_wt[train$Diabetes_012]))
+obs_weights <- obs_weights / mean(obs_weights)
+
+model_polr <- polr(
+  Diabetes_012 ~ .,
+  data = train,
+  weights = obs_weights,
+  Hess = TRUE,
+)
+
+summary(model_polr)
+```
+```{r}
+summary(obs_weights)
+tapply(obs_weights, train$Diabetes_012, mean)
+```
+
+
+```{r}
+coefs <- coef(summary(model_polr))
+pvals <- pnorm(abs(coefs[, "t value"]), lower.tail = FALSE) * 2
+cbind(coefs, "p value" = pvals)
+```
+
+
+```{r}
+test$Diabetes_012 <- factor(test$Diabetes_012,
+                            levels = c("NoDiabetes", "PreDiabetes", "Diabetes"))
+
+roc_no <- roc(response = ifelse(test$Diabetes_012 == "NoDiabetes", 1, 0),
+              predictor = pred[, "NoDiabetes"],
+              quiet = TRUE)
+
+roc_pre <- roc(response = ifelse(test$Diabetes_012 == "PreDiabetes", 1, 0),
+               predictor = pred[, "PreDiabetes"],
+               quiet = TRUE)
+
+roc_dia <- roc(response = ifelse(test$Diabetes_012 == "Diabetes", 1, 0),
+               predictor = pred[, "Diabetes"],
+               quiet = TRUE)
+
+plot(roc_no, col = "blue", main = "One-vs-rest ROC Curves", legacy.axes = TRUE)
+plot(roc_pre, col = "orange", add = TRUE)
+plot(roc_dia, col = "red", add = TRUE)
+legend("bottomright",
+       legend = c("NoDiabetes", "PreDiabetes", "Diabetes"),
+       col = c("blue", "orange", "red"),
+       lwd = 2)
+
+auc(roc_no); auc(roc_pre); auc(roc_dia)
+```
+
+
+```{r}
+target <- 0.8
+avail <- roc_dia$sensitivities
+closest <- avail[which.min(abs(avail - target))]
+coords(roc_dia, x = closest, input = "sensitivity", ret = c("threshold", "specificity", "sensitivity"))
+```
+
+```{r}
+pred <- predict(model_polr, newdata = test, type = "probs")
+pred_df <- as.data.frame(pred)
+
+t_pre <- 0.5
+t_diab <- 0.25
+
+cm <- create_cm(pred_df, t_pre, t_diab, test)
+plot_cm(cm)
 ```
 
