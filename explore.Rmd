@@ -62,8 +62,7 @@ cbind(coefs, "p value" = pvals)
 
 
 ```{r}
-test$Diabetes_012 <- factor(test$Diabetes_012,
-                            levels = c("NoDiabetes", "PreDiabetes", "Diabetes"))
+pred <- predict(model_polr, newdata = test, type = "probs")
 
 roc_no <- roc(response = ifelse(test$Diabetes_012 == "NoDiabetes", 1, 0),
               predictor = pred[, "NoDiabetes"],
@@ -90,18 +89,18 @@ auc(roc_no); auc(roc_pre); auc(roc_dia)
 
 
 ```{r}
-target <- 0.8
-avail <- roc_dia$sensitivities
+target <- 0.9
+avail <- roc_pre$sensitivities
 closest <- avail[which.min(abs(avail - target))]
-coords(roc_dia, x = closest, input = "sensitivity", ret = c("threshold", "specificity", "sensitivity"))
+coords(roc_pre, x = closest, input = "sensitivity", ret = c("threshold", "specificity", "sensitivity"))
 ```
 
 ```{r}
 pred <- predict(model_polr, newdata = test, type = "probs")
 pred_df <- as.data.frame(pred)
 
-t_pre <- 0.5
-t_diab <- 0.25
+t_pre <- 0.4
+t_diab <- 0.5
 
 cm <- create_cm(pred_df, t_pre, t_diab, test)
 plot_cm(cm)
