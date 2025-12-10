@@ -1,0 +1,61 @@
+---
+title: "ordforest"
+output: html_document
+---
+
+```{r}
+library(MASS)
+library(e1071)
+library(car)
+library(caret)
+library(pROC)
+library(tidymodels)
+library(themis)
+library(ordinalForest)
+
+source("cleandata.R")
+source("confusionmatrix.R")
+```
+
+```{r}
+diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
+diabetes <- cleandata(diabetes_raw)
+head(diabetes)
+```
+
+```{r}
+diabetes |> count(Diabetes_012)
+```
+
+```{r}
+rec <- recipe(Diabetes_012 ~ ., data = diabetes) |>
+  step_downsample(Diabetes_012)
+
+rec_prep <- prep(rec)
+
+train <- bake(rec_prep, new_data = NULL)
+
+train |> count(Diabetes_012)
+```
+
+```{r}
+of.model <- ordfor(depvar = "Diabetes_012", data = as.data.frame(train))
+#save(of.model, file = "ordforest.RData")
+```
+
+
+```{r}
+#load("ordforest.RData")
+```
+
+```{r}
+sampled <- sample(nrow(diabetes), 10000)
+pred <- predict(of.model, newdata = diabetes[sampled, ])
+```
+
+
+```{r}
+cm <- confusionMatrix(pred$ypred, diabetes[sampled, ]$Diabetes_012) 
+plot_cm(cm)
+```
+
