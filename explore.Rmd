@@ -27,8 +27,8 @@ diabetes |> count(Diabetes_012)
 ```
 
 ```{r}
-rec <- recipe(Diabetes_012 ~ ., data = train) |>
-  step_upsample(Diabetes_012)
+rec <- recipe(Diabetes_012 ~ ., data = diabetes) |>
+  step_downsample(Diabetes_012)
 
 rec_prep <- prep(rec)
 
