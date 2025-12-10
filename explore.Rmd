@@ -9,6 +9,9 @@ library(e1071)
 library(car)
 library(caret)
 library(pROC)
+library(tidymodels)
+library(themis)
+
 source("cleandata.R")
 source("confusionmatrix.R")
 ```
@@ -24,52 +27,42 @@ diabetes |> count(Diabetes_012)
 ```
 
 ```{r}
-set.seed(123)
+rec <- recipe(Diabetes_012 ~ ., data = train) |>
+  step_upsample(Diabetes_012)
 
-train_index <- createDataPartition(diabetes$Diabetes_012, p = 0.8, list = FALSE)
-train <- diabetes[train_index, ]
-test  <- diabetes[-train_index, ]
+rec_prep <- prep(rec)
+
+train <- bake(rec_prep, new_data = NULL)
+
+train |> count(Diabetes_012)
 ```
 
 ```{r}
-class_freq <- table(train$Diabetes_012)
-class_wt <- max(class_freq) / class_freq
-obs_weights <- as.numeric(unname(class_wt[train$Diabetes_012]))
-obs_weights <- obs_weights / mean(obs_weights)
-
 model_polr <- polr(
-  Diabetes_012 ~ .,
+  Diabetes_012 ~ .^2,
   data = train,
-  weights = obs_weights,
   Hess = TRUE,
 )
-
-summary(model_polr)
-```
-
-```{r}
-summary(obs_weights)
-tapply(obs_weights, train$Diabetes_012, mean)
 ```
 
 ```{r}
 coefs <- coef(summary(model_polr))
 pvals <- pnorm(abs(coefs[, "t value"]), lower.tail = FALSE) * 2
-cbind(coefs, "p value" = pvals)
+summary <- cbind(coefs, "p value" = pvals)
 ```
 
 ```{r}
-pred <- predict(model_polr, newdata = test, type = "probs")
+pred <- predict(model_polr, newdata = diabetes, type = "probs")
 
-roc_no <- roc(response = ifelse(test$Diabetes_012 == "NoDiabetes", 1, 0),
+roc_no <- roc(response = ifelse(diabetes$Diabetes_012 == "NoDiabetes", 1, 0),
               predictor = pred[, "NoDiabetes"],
               quiet = TRUE)
 
-roc_pre <- roc(response = ifelse(test$Diabetes_012 == "PreDiabetes", 1, 0),
+roc_pre <- roc(response = ifelse(diabetes$Diabetes_012 == "PreDiabetes", 1, 0),
                predictor = pred[, "PreDiabetes"],
                quiet = TRUE)
 
-roc_dia <- roc(response = ifelse(test$Diabetes_012 == "Diabetes", 1, 0),
+roc_dia <- roc(response = ifelse(diabetes$Diabetes_012 == "Diabetes", 1, 0),
                predictor = pred[, "Diabetes"],
                quiet = TRUE)
 
@@ -92,12 +85,13 @@ coords(roc_pre, x = closest, input = "sensitivity", ret = c("threshold", "specif
 ```
 
 ```{r}
-pred <- predict(model_polr, newdata = test, type = "probs")
+pred <- predict(model_polr, newdata = diabetes, type = "probs")
 pred_df <- as.data.frame(pred)
 
-t_pre <- 0.4
-t_diab <- 0.5
+t_pre <- 0.5
+t_diab <- 0.3
 
-cm <- create_cm(pred_df, t_pre, t_diab, test)
+cm <- create_cm(pred_df, t_pre, t_diab, diabetes)
 plot_cm(cm)
 ```
+

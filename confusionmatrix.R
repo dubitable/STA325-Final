@@ -1,3 +1,14 @@
+get_preds <- function(pred_df, t_pre, t_diab, test) {
+  predicted_three <- with(pred_df, 
+                          ifelse(PreDiabetes + Diabetes < t_pre, "NoDiabetes",
+                                 ifelse(Diabetes >= t_diab, "Diabetes", "PreDiabetes"))
+  )
+  
+  predicted_three <- factor(predicted_three, 
+                            levels = c("NoDiabetes", "PreDiabetes", "Diabetes"))
+  return(predicted_three)
+}
+
 create_cm <- function(pred_df, t_pre, t_diab, test) {
   
   predicted_three <- with(pred_df, 
@@ -17,15 +28,20 @@ plot_cm <- function(cm) {
   cm_df <- as.data.frame(cm$table)
   names(cm_df) <- c("Predicted", "Actual", "Freq")
   
-  ggplot(cm_df, aes(x = Actual, y = Predicted, fill = Freq)) +
+  cm_df <- cm_df |>
+    group_by(Actual) |>
+    mutate(Percent = Freq / sum(Freq))
+  
+  ggplot(cm_df, aes(x = Actual, y = Predicted, fill = Percent)) +
     geom_tile(color = "white") +
-    geom_text(aes(label = Freq), color = "black", size = 3) +
+    geom_text(aes(label = sprintf("%d\n(%.1f%%)", Freq, Percent * 100)),
+              color = "black", size = 3) +
     scale_fill_gradient(low = "white", high = "steelblue") +
     labs(
-      title = "Confusion Matrix (Shaded by Frequency)",
+      title = "Confusion Matrix (Shaded by % of Actual Class)",
       x = "Actual Class",
       y = "Predicted Class",
-      fill = "Count"
+      fill = "% of Actual"
     ) +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
