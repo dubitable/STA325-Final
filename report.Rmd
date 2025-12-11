@@ -42,17 +42,17 @@ diabetes <- cleandata(diabetes_raw)
 
 (Make sure to label figures numerically with descriptive captions)
 
-## Data Description
+### Data Description
 
 The dataset used for this analysis, `diabetes_012_health_indicators_BRFSS2015.csv`, contains 253,680 survey responses with 21 features. These features include health-related responses to survey questions and derived variables summarizing participant health status. Our target variable, `Diabetes_012`, represents three ordered categories: non-diabetes (0), prediabetes (1), and diabetes (2). Type 2 diabetes accounts for the majority of cases in this dataset.
 
-## Data Preparation
+### Data Preparation
 
 Minimal data cleaning was performed to ensure proper variable types. The variables `BMI`, `MentHlth`, and `PhysHlth` were treated as numeric, while all other variables were converted to factors. The target variable `Diabetes_012` was encoded as an ordered factor to reflect the severity of disease.
 
 The data were split into training and testing sets using an 80-20 split. Exploratory data analysis on the training set revealed that the classes were imbalanced, with prediabetes being underrepresented (see Figures 1 and 2 below). To address this, downsampling of the majority classes was applied to improve model performance while keeping computation manageable.
 
-## Exploratory Data Analysis 
+### Exploratory Data Analysis 
 
 We examined the distributions of categorical variables and visualized the proportion of each `Diabetes_012` category across levels of the features (see Figure 1). This helped identify variables with strong associations with diabetes status. Additionally, (Figure 2) helped us identify the need for data balancing as there were far more non-diabetes and diabetes case observations compared to prediabetes ones.
 
@@ -87,11 +87,11 @@ diabetes |> count(Diabetes_012)
 
 After building intuition for the underlying feature distributions, our group experimented with various model types, transformations, and predictors to get best predictive accuracy.
 
-## Transformations
+### Transformations
 
-## Interaction Effects
+### Interaction Effects
 
-## Modeling Approach
+### Modeling Approach
 
 To account for the ordinal nature of the outcome, we used ordinal logistic regression, also known as proportional odds or ordinal multinomial logistic regression. This approach models the ordered progression from non-diabetes to prediabetes to diabetes. Multiple model specifications were tested, including different combinations of predictors, interaction terms, and variable transformations.
 
@@ -105,9 +105,9 @@ results of multinomal logistic regression model
 
 results of SVMs, decision trees. pros and cons.
 
-## Assumptions and Uncertainty
+### Assumptions and Uncertainty
 
-## Interpretation
+### Interpretation
 
 This time around, need more plots showing degree of interactions and nonlinearities
 
