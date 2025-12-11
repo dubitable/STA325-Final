@@ -9,12 +9,11 @@ library(e1071)
 library(car)
 library(caret)
 library(pROC)
-library(tidymodels)
-library(themis)
 library(brant)
 
 source("cleandata.R")
 source("confusionmatrix.R")
+source("partition.R")
 ```
 
 ```{r}
@@ -29,23 +28,31 @@ diabetes |> count(Diabetes_012)
 ```
 
 ```{r}
-rec <- recipe(Diabetes_012 ~ ., data = diabetes) |>
-  step_downsample(Diabetes_012)
-
-rec_prep <- prep(rec)
-
-train <- bake(rec_prep, new_data = NULL)
+split <- partition(diabetes, 0.8)
+train <- split$train
+test <- split$test
 
 train |> count(Diabetes_012)
 ```
 
 ```{r}
 model_polr <- polr(
-  Diabetes_012 ~ Age * BMI + Sex + HighChol + HighBP,
+  Diabetes_012 ~ .,
   data = train,
   Hess = TRUE,
 )
 ```
+
+```{r}
+
+```
+
+
+```{r}
+model_polr <- model_polr_step
+```
+
+
 
 ```{r}
 pvalues <- function (model, threshold = 0.05) {
@@ -63,17 +70,17 @@ pvalues(model_polr, 0.01)
 ```
 
 ```{r}
-pred <- predict(model_polr, newdata = diabetes, type = "probs")
+pred <- predict(model_polr, newdata = test, type = "probs")
 
-roc_no <- roc(response = ifelse(diabetes$Diabetes_012 == "NoDiabetes", 1, 0),
+roc_no <- roc(response = ifelse(test$Diabetes_012 == "NoDiabetes", 1, 0),
               predictor = pred[, "NoDiabetes"],
               quiet = TRUE)
 
-roc_pre <- roc(response = ifelse(diabetes$Diabetes_012 == "PreDiabetes", 1, 0),
+roc_pre <- roc(response = ifelse(test$Diabetes_012 == "PreDiabetes", 1, 0),
                predictor = pred[, "PreDiabetes"],
                quiet = TRUE)
 
-roc_dia <- roc(response = ifelse(diabetes$Diabetes_012 == "Diabetes", 1, 0),
+roc_dia <- roc(response = ifelse(test$Diabetes_012 == "Diabetes", 1, 0),
                predictor = pred[, "Diabetes"],
                quiet = TRUE)
 
@@ -96,17 +103,18 @@ coords(roc_pre, x = closest, input = "sensitivity", ret = c("threshold", "specif
 ```
 
 ```{r}
-pred <- predict(model_polr, newdata = diabetes, type = "probs")
+pred <- predict(model_polr, newdata = test, type = "probs")
 pred_df <- as.data.frame(pred)
 
 t_pre <- 0.5
 t_diab <- 0.3
 
-cm <- create_cm(pred_df, t_pre, t_diab, diabetes)
+cm <- create_cm(pred_df, t_pre, t_diab, test)
 plot_cm(cm)
 ```
 
 ```{r}
 brant(model_polr)
 ```
+
 
