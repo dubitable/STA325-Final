@@ -2,3 +2,113 @@
 title: "mike"
 output: html_document
 ---
+
+```{r}
+library(MASS)
+library(e1071)
+library(car)
+library(caret)
+library(pROC)
+library(brant)
+library(tidymodels)
+library(parsnip)
+
+source("cleandata.R")
+source("confusionmatrix.R")
+source("partition.R")
+
+# run my own tests. copy pierre but add CV and test with ordinal multinomal log reg
+# check out interaction terms?
+# polr(formula = Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI + HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth + Sex + Age + HighBP: GenHlth, data = train, Hess = TRUE)
+```
+
+```{r}
+diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
+diabetes <- cleandata(diabetes_raw)
+head(diabetes)
+```
+
+```{r}
+diabetes |> count(Diabetes_012)
+```
+
+```{r}
+split <- partition(diabetes, 0.8)
+train <- split$train
+test <- split$test
+
+train |> count(Diabetes_012)
+```
+
+```{r}
+set.seed(123)
+folds <- createFolds(train$Diabetes_012, k = 5, list = TRUE)
+
+cv_metrics <- data.frame(Fold = numeric(),
+                         Accuracy = numeric(),
+                         Balanced_Acc = numeric())
+
+for (i in seq_along(folds)) {
+  # training / validation split for this fold
+  val_idx <- folds[[i]]
+  cv_train <- train[-val_idx, ]
+  cv_val   <- train[val_idx, ]
+  
+  # fit model (including the HighBP:GenHlth interaction)
+  mod <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI +
+                 HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth +
+                 Sex + Age + HighBP:GenHlth,
+              data = cv_train, Hess = TRUE)
+
+  # predicted class for validation data
+  preds <- predict(mod, newdata = cv_val, type = "class")
+  
+  cm <- confusionMatrix(preds, cv_val$Diabetes_012)
+  
+  cv_metrics <- rbind(cv_metrics,
+                      data.frame(Fold = i,
+                                 Accuracy = cm$overall["Accuracy"],
+                                 Balanced_Acc = cm$byClass["Balanced Accuracy"]))
+}
+
+cv_summary <- cv_metrics |>
+  summarise(mean_acc = mean(Accuracy),
+            mean_bal_acc = mean(Balanced_Acc))
+cv_summary
+```
+
+```{r}
+final_polr <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI +
+                     HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth +
+                     Sex + Age + HighBP:GenHlth,
+                   data = train, Hess = TRUE)
+
+# class predictions
+test_pred_class <- predict(final_polr, newdata = test, type = "class")
+confusionMatrix(test_pred_class, test$Diabetes_012)
+```
+
+```{r}
+test_probs <- as.data.frame(predict(final_polr, newdata = test, type = "probs"))
+
+roc_no  <- roc(ifelse(test$Diabetes_012=="NoDiabetes",1,0),  test_probs$NoDiabetes,   quiet=TRUE)
+roc_pre <- roc(ifelse(test$Diabetes_012=="PreDiabetes",1,0), test_probs$PreDiabetes,  quiet=TRUE)
+roc_dia <- roc(ifelse(test$Diabetes_012=="Diabetes",1,0),    test_probs$Diabetes,     quiet=TRUE)
+
+plot(roc_no,  col="blue",   main="One‑vs‑Rest ROC Curves", legacy.axes=TRUE)
+plot(roc_pre, col="orange", add=TRUE)
+plot(roc_dia, col="red",    add=TRUE)
+legend("bottomright",
+       legend=c("NoDiabetes","PreDiabetes","Diabetes"),
+       col=c("blue","orange","red"), lwd=2)
+
+auc(roc_no); auc(roc_pre); auc(roc_dia)
+```
+
+```{r}
+brant(final_polr)
+```
+
+```{r}
+
+```
