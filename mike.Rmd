@@ -20,8 +20,9 @@ source("eval.R")
 source("confusionmatrix.R")
 source("partition.R")
 
-# run my own tests. copy pierre but add CV and test with ordinal multinomal log reg
+# run my own tests. copy pierre but add CV and test with ordinal multinomal logistic regression
 # check out interaction terms?
+
 # polr(formula = Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI + HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth + Sex + Age + HighBP: GenHlth, data = train, Hess = TRUE)
 ```
 
@@ -35,6 +36,90 @@ head(diabetes)
 diabetes |> count(Diabetes_012)
 ```
 
+## EDA
+
+```{r}
+diabetes |>
+  select(BMI, MentHlth, PhysHlth) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "value") |>
+  ggplot(aes(x = value)) +
+    geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+    facet_wrap(~variable, scales = "free")
+```
+
+```{r}
+diabetes |>
+  select(Age, HighBP, HighChol, CholCheck, HeartDiseaseorAttack, HvyAlcoholConsump, GenHlth, Sex) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "value") %>%
+  ggplot(aes(x = value)) +
+    geom_bar(fill = "steelblue") +
+    facet_wrap(~variable, scales = "free")
+```
+
+```{r}
+cat_vars <- c("Age", "HighBP", "HighChol", "CholCheck", 
+              "HeartDiseaseorAttack", "HvyAlcoholConsump", 
+              "GenHlth", "Sex")
+
+diabetes %>%
+  select(all_of(cat_vars), Diabetes_012) %>%
+  pivot_longer(cols = all_of(cat_vars), names_to = "variable", values_to = "value") %>%
+  ggplot(aes(x = value, fill = Diabetes_012)) +
+    geom_bar(position = "fill") +                  # stack normalized to proportions
+    scale_y_continuous(labels = scales::percent_format()) +
+    facet_wrap(~variable, scales = "free") +
+    labs(
+      y = "Proportion of Diabetes Categories",
+      x = NULL,
+      fill = "Diabetes Status",
+      title = "Diabetes Proportions by Categorical Variables"
+    ) +
+    theme_minimal()
+
+```
+
+```{r}
+ggplot(diabetes, aes(x = GenHlth, fill = Diabetes_012)) +
+  geom_bar(position = "fill") +  # normalized proportions
+  labs(y = "Proportion")
+
+```
+
+```{r}
+ggplot(diabetes, aes(x = BMI, y = Diabetes_012)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(train, aes(x = BMI, y = PhysHlth, color = Diabetes_012)) +
+  geom_jitter(height = 0.1, width = 0.1, alpha = 0.5)
+
+```
+
+```{r}
+
+```
+
+```{r}
+library(corrplot)
+num_vars <- diabetes %>% select(BMI, PhysHlth)
+corrplot(cor(num_vars), method = "color", type = "upper")
+
+```
+
+```{r}
+
+```
+
+```{r}
+library(corrplot)
+num_vars <- diabetes %>% select(BMI, MentHlth, PhysHlth)
+corrplot(cor(num_vars), method = "color", type = "upper")
+
+```
+
+## Downsampling
+
 ```{r}
 split <- partition(diabetes, 0.8)
 train <- split$train
@@ -42,6 +127,8 @@ test <- split$test
 
 train |> count(Diabetes_012)
 ```
+
+## K-Fold Cross Validation (variety of test metrics)
 
 ```{r}
 set.seed(123)
@@ -139,7 +226,9 @@ legend("bottomright",
        legend=c("NoDiabetes","PreDiabetes","Diabetes"),
        col=c("blue","orange","red"), lwd=2)
 
-auc(roc_no); auc(roc_pre); auc(roc_dia)
+print(pROC::auc(roc_no))
+print(pROC::auc(roc_pre))
+print(pROC::auc(roc_dia))
 ```
 
 ```{r}
