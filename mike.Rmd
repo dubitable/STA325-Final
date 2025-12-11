@@ -99,18 +99,9 @@ ggplot(train, aes(x = BMI, y = PhysHlth, color = Diabetes_012)) +
 ```
 
 ```{r}
-
-```
-
-```{r}
 library(corrplot)
 num_vars <- diabetes %>% select(BMI, PhysHlth)
 corrplot(cor(num_vars), method = "color", type = "upper")
-
-```
-
-```{r}
-
 ```
 
 ```{r}
@@ -118,6 +109,11 @@ library(corrplot)
 num_vars <- diabetes %>% select(BMI, MentHlth, PhysHlth)
 corrplot(cor(num_vars), method = "color", type = "upper")
 
+```
+
+```{r}
+ggplot(diabetes, aes(x = BMI, y = Diabetes_012)) +
+  geom_boxplot()
 ```
 
 ## Downsampling
@@ -237,6 +233,74 @@ print(pROC::auc(roc_dia))
 brant(final_polr)
 ```
 
+## Transformation EDA
+
 ```{r}
+# Make transformed columns
+
+train <- train %>%
+mutate(
+BMI_log = log(BMI),
+BMI_sqrt = sqrt(BMI)
+)
+
+test <- test %>%
+mutate(
+BMI_log = log(BMI),
+BMI_sqrt = sqrt(BMI)
+)
+
+# Function to fit polr model and get metrics
+
+evaluate_polr <- function(train_df, test_df, bmi_var) {
+formula <- as.formula(paste(
+"Diabetes_012 ~ HighBP + HighChol + CholCheck +",
+bmi_var,
+"+ HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth + Sex + Age + HighBP:GenHlth"
+))
+
+mod <- polr(formula, data = train_df, Hess = TRUE)
+
+pred_class <- predict(mod, newdata = test_df, type = "class")
+pred_probs <- as.data.frame(predict(mod, newdata = test_df, type = "probs"))
+
+metrics <- list(
+Accuracy = confusionMatrix(pred_class, test_df$Diabetes_012)$overall["Accuracy"],
+Balanced_Acc = confusionMatrix(pred_class, test_df$Diabetes_012)$byClass["Balanced Accuracy"],
+QWK = qwk_score(test_df$Diabetes_012, pred_class),
+LogLoss = log_loss(test_df$Diabetes_012, pred_probs),
+MAE = mae_ord(test_df$Diabetes_012, pred_class),
+MacroAUC = macro_auc(test_df$Diabetes_012, pred_probs)
+)
+
+return(metrics)
+}
+
+# Evaluate original BMI, log(BMI), and sqrt(BMI)
+
+metrics_orig <- evaluate_polr(train, test, "BMI")
+metrics_log  <- evaluate_polr(train, test, "BMI_log")
+metrics_sqrt <- evaluate_polr(train, test, "BMI_sqrt")
+
+metrics_orig
+metrics_log
+metrics_sqrt
+```
+
+```{r}
+
+# Combine the metrics into a single data frame
+results <- tibble(
+  Model = c("BMI", "log(BMI)", "sqrt(BMI)"),
+  Accuracy = c(metrics_orig$Accuracy, metrics_log$Accuracy, metrics_sqrt$Accuracy),
+  Balanced_Acc = c(metrics_orig$Balanced_Acc, metrics_log$Balanced_Acc, metrics_sqrt$Balanced_Acc),
+  QWK = c(metrics_orig$QWK, metrics_log$QWK, metrics_sqrt$QWK),
+  LogLoss = c(metrics_orig$LogLoss, metrics_log$LogLoss, metrics_sqrt$LogLoss),
+  MAE = c(metrics_orig$MAE, metrics_log$MAE, metrics_sqrt$MAE),
+  MacroAUC = c(metrics_orig$MacroAUC, metrics_log$MacroAUC, metrics_sqrt$MacroAUC)
+)
+
+# Print nicely
+results
 
 ```
