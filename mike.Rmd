@@ -24,6 +24,8 @@ source("partition.R")
 # check out interaction terms?
 
 # polr(formula = Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI + HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth + Sex + Age + HighBP: GenHlth, data = train, Hess = TRUE)
+
+# We use threshold-independent metrics (QWK, log loss, MAE, AUC) to select the best model. Then we can use threshold-dependent metrics (ROC, F1, Precision/Recall) to pick the optimal threshold
 ```
 
 ```{r}
