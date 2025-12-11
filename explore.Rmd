@@ -7,8 +7,6 @@ output: pdf_document
 set.seed(123)
 
 library(MASS)
-library(e1071)
-library(car)
 library(caret)
 library(pROC)
 library(brant)
@@ -16,6 +14,7 @@ library(brant)
 source("cleandata.R")
 source("confusionmatrix.R")
 source("partition.R")
+source("eval.R")
 ```
 
 ```{r}
@@ -108,6 +107,7 @@ coords(roc_pre, x = closest, input = "sensitivity", ret = c("threshold", "specif
 
 ```{r}
 pred <- predict(model_polr, newdata = test, type = "probs")
+predclass <- predict(model_polr, newdata = test, type = "class")
 pred_df <- as.data.frame(pred)
 
 t_pre <- 0.5
@@ -119,5 +119,12 @@ plot_cm(cm)
 ```
 
 ```{r}
+qwk_score(predclass, test$Diabetes_012)
+mae_ord(pred, test$Diabetes_012)
+```
+
+
+```{r}
 brant(model_polr)
 ```
+

@@ -9,13 +9,14 @@ set.seed(123)
 library(caret)
 library(randomForest)
 
-source("cleandata.R")
-source("confusionmatrix.R")
-source("partition.R")
+source("../cleandata.R")
+source("../confusionmatrix.R")
+source("../partition.R")
+source("../eval.R")
 ```
 
 ```{r}
-diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
+diabetes_raw <- read.csv("../data/diabetes_012_health_indicators_BRFSS2015.csv")
 diabetes <- cleandata(diabetes_raw)
 head(diabetes)
 ```
@@ -40,5 +41,10 @@ rf.model <- randomForest(Diabetes_012 ~ ., data = train, importance = TRUE)
 pred <- predict(rf.model, newdata = test)
 cm <- confusionMatrix(pred, test$Diabetes_012) 
 plot_cm(cm)
+```
+
+```{r}
+qwk_score(pred, test$Diabetes_012)
+mae_ord(pred, test$Diabetes_012)
 ```
 

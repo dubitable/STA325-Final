@@ -9,13 +9,14 @@ set.seed(123)
 library(caret)
 library(ordinalForest)
 
-source("cleandata.R")
-source("confusionmatrix.R")
-source("partition.R")
+source("../cleandata.R")
+source("../confusionmatrix.R")
+source("../partition.R")
+source("../eval.R")
 ```
 
 ```{r}
-diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
+diabetes_raw <- read.csv("../data/diabetes_012_health_indicators_BRFSS2015.csv")
 diabetes <- cleandata(diabetes_raw)
 head(diabetes)
 ```
@@ -50,5 +51,10 @@ pred <- predict(of.model, newdata = test)
 ```{r}
 cm <- confusionMatrix(pred$ypred, test$Diabetes_012) 
 plot_cm(cm)
+```
+
+```{r}
+qwk_score(pred$ypred, test$Diabetes_012)
+mae_ord(pred$ypred, test$Diabetes_012)
 ```
 

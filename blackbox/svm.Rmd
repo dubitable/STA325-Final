@@ -9,13 +9,14 @@ set.seed(123)
 library(e1071)
 library(caret)
 
-source("cleandata.R")
-source("partition.R")
-source("confusionmatrix.R")
+source("../cleandata.R")
+source("../partition.R")
+source("../confusionmatrix.R")
+source("../eval.R")
 ```
 
 ```{r}
-diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
+diabetes_raw <- read.csv("../data/diabetes_012_health_indicators_BRFSS2015.csv")
 diabetes <- cleandata(diabetes_raw)
 head(diabetes)
 ```
@@ -58,11 +59,23 @@ svm.model <- svm(
 ```{r}
 summary(svm.model)
 ```
+
 ```{r}
 pred <- predict(svm.model, newdata = test)
 cm <- confusionMatrix(pred, test$Diabetes_012) 
 plot_cm(cm)
 ```
 
+```{r}
+qwk_score(pred, test$Diabetes_012)
+mae_ord(pred, test$Diabetes_012)
+```
 
+
+| model      | QWK  | MAE  |
+|------------|------|------|
+| CumLogit   | 0.35 | 0.96 |
+| SVM        | 0.32 | 0.57 |
+| RandForest | 0.32 | 0.55 |
+| OrdForest  | 0.31 | 0.56 |
 

@@ -10,9 +10,10 @@ library(MASS)
 library(caret)
 library(xgboost)
 
-source("cleandata.R")
-source("partition.R")
-source("confusionmatrix.R")
+source("../cleandata.R")
+source("../partition.R")
+source("../confusionmatrix.R")
+source("../eval.R")
 ```
 
 ```{r}
