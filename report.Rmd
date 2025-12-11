@@ -22,9 +22,9 @@ The primary goal of this project is to develop predictive models that estimate a
 2.  Which health indicators and behaviors are the most predictive of diabetes risk?
 3.  Can a reduced set of features provide reliable predictions, enabling the creation of a short-form screening tool?
 
-Although the data are from 2015, understanding the relationships between different health indicators and the risk of prediabetes and diabetes can help inform public health officials, healthcare providers, and researchers. The hope is that this research can help identify high-risk populations, guide doctor-patient conversations, and better inform the public about early-intervention strategies.
+Strikingly, 1 in 5 diabetics and 8 in 10 prediabetics are not aware of their risk today. Therefore, understanding the relationships between different health indicators and the risk of prediabetes and diabetes can help inform public health officials, healthcare providers, and researchers. The only way to truly diagnose prediabetes or diabetes are through testing glucose levels, so our research focuses instead on helping identify high-risk populations, guiding doctor-patient conversations, and better informing the public about early-intervention strategies rather than replacing current diagnosis tools.
 
-To achieve these goals, we combine exploratory data analysis (EDA), feature selection, and predictive modeling. The analysis starts with an examination of the distributions of key health indicators and their associations with diabetes status, followed by an assessment of useful interaction effects and variable transformations. We then train and evaluate ordinal logistic regression models using k-fold cross-validation. Model selection is based on threshold-independent metrics such as quadratic weighted kappa, log loss, mean absolute error, and macro AUC. Once the best model is chosen, threshold-dependent metrics such as One-vs-All (OvA) ROC, F1, precision, and recall can be used to determine an optimal probability cutoff. This framework provides insights into the most predictive health indicators and supports both clinical practice and public health applications.
+To achieve these goals, we combine exploratory data analysis (EDA), feature selection, and predictive modeling. The analysis starts with an examination of the distributions of key health indicators and their associations with diabetes status, followed by an assessment of useful interaction effects and variable transformations. We then train and evaluate cumulative logistic regression models using k-fold cross-validation. Model selection is based on threshold-independent metrics such as BIC, quadratic weighted kappa, log loss, mean absolute error, and macro AUC. Once the best model is chosen, threshold-dependent metrics such as One-vs-All (OvA) ROC, F1, precision, and recall can be used to determine an optimal probability cutoff. This framework provides insights into the most predictive health indicators and supports both clinical practice and public health applications.
 
 # Methodology
 
@@ -44,13 +44,13 @@ diabetes <- cleandata(diabetes_raw)
 
 ### Data Description
 
-The dataset used for this analysis, `diabetes_012_health_indicators_BRFSS2015.csv`, contains 253,680 survey responses with 21 features. These features include health-related responses to survey questions and derived variables summarizing participant health status. Our target variable, `Diabetes_012`, represents three ordered categories: non-diabetes (0), prediabetes (1), and diabetes (2). Type 2 diabetes accounts for the majority of cases in this dataset.
+The dataset used for this analysis contains 253,680 survey responses with 21 features. These features include health-related responses to survey questions and derived variables summarizing participant health status. Our target variable, `Diabetes_012`, represents three ordered categories: non-diabetes (0), prediabetes (1), and diabetes (2). Type 2 diabetes accounts for the majority of cases in this dataset.
 
 ### Data Preparation
 
 Minimal data cleaning was performed to ensure proper variable types. The variables `BMI`, `MentHlth`, and `PhysHlth` were treated as numeric, while all other variables were converted to factors. The target variable `Diabetes_012` was encoded as an ordered factor to reflect the severity of disease.
 
-The data were split into training and testing sets using an 80-20 split. Exploratory data analysis on the training set revealed that the classes were imbalanced, with prediabetes being underrepresented (see Figures 1 and 2 below). To address this, downsampling of the majority classes was applied to improve model performance while keeping computation manageable.
+The data were split into training and testing sets using an 80-20 split. Exploratory data analysis on the training set revealed that the classes were heavily imbalanced, with prediabetes being underrepresented (see Figures 1 and 2 below). To address this, downsampling of the majority classes was applied to improve model performance while keeping computation manageable.
 
 ### Exploratory Data Analysis 
 
@@ -93,9 +93,21 @@ After building intuition for the underlying feature distributions, our group exp
 
 ### Modeling Approach
 
-To account for the ordinal nature of the outcome, we used ordinal logistic regression, also known as proportional odds or ordinal multinomial logistic regression. This approach models the ordered progression from non-diabetes to prediabetes to diabetes. Multiple model specifications were tested, including different combinations of predictors, interaction terms, and variable transformations.
+To account for the ordinal nature of the outcome, we used cumulative logit classification, also known as proportional odds logistic regression. This approach models the ordered progression from non-diabetes to prediabetes to diabetes. Multiple model specifications were tested, including different combinations of predictors, interaction terms, and variable transformations.
 
-[Insert model equation here]
+replace with final model
+
+$$
+Diabetes \sim HighBP + HighChol + CholCheck + BMI + HeartDisease + HeavyAlc + GenHlth + Sex + Age + HighBP:GenHlth
+$$
+## Other Methods: Black Box Models
+(remove if we decide not to use)
+
+While our main focus was to develop a model on a subset of predictors that allowed for interpretation of the driving factors of diabetes risk, we also considered several "black box" models that focused on predictive power rather than inference.
+- Random Forests: 
+- Ordinal Forests:
+- Boosted Tree: 
+- Support Vector Machine (SVM):  
 
 # Results
 
