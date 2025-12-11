@@ -24,7 +24,13 @@ head(diabetes)
 ```
 
 ```{r}
-diabetes |> count(Diabetes_012)
+
+
+diabetes |> count(Diabetes_012) |> ggplot(aes(x = "", y = n, fill=Diabetes_012)) + 
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) + 
+  theme_void() + 
+  labs(fill = "Diabetes Status")
 ```
 
 ```{r}
@@ -125,6 +131,59 @@ mae_ord(pred, test$Diabetes_012)
 
 
 ```{r}
-brant(model_polr)
+plot_probs <- function(model, inputs) {
+  a1 <- model$zeta["NoDiabetes|PreDiabetes"]
+  a2 <- model$zeta["PreDiabetes|Diabetes"]
+  
+  coefs <- model$coefficients
+  
+  offset <- 0
+  
+  if (!is.null(inputs)) {
+    names_in_model <- intersect(names(inputs), names(coefs))
+    offset <- sum(coefs[names_in_model] * unlist(inputs[names_in_model]))
+  }
+  
+  b <-  coefs["BMI"]
+  
+  x <- seq(min(diabetes$BMI), max(diabetes$BMI), by = 0.1)
+  
+  eta1 <- a1 - (b * x + offset)
+  eta2 <- a2 - (b * x + offset)
+  
+  P1 <- plogis(eta1)
+  P2 <- plogis(eta2)
+  
+  p1 <- P1
+  p2 <- P2 - P1
+  p3 <- 1 - P2
+  
+  df <- data.frame(
+    x = rep(x, 3),
+    prob = c(p1, p2, p3),
+    outcome = factor(rep(c("NoDiabetes", "PreDiabetes", "Diabetes"), each = length(x)))
+  )
+  
+  ggplot(df, aes(x = x, y = prob, color = outcome)) +
+    geom_line() +
+    ylab("Probability") +
+    xlab("BMI") +
+    theme_minimal() 
+}
+```
+
+```{r}
+inputs <- list(
+  HighBP = 1,
+  HighChol = 1,
+  CholCheck = 1,
+  HeartDiseaseorAttack = 1,
+  HvyAlcoholConsump = 1,
+  GenHlth = 5,
+  Sex = 1,
+  Age = 10
+)
+
+plot_probs(model_polr, inputs)
 ```
 
