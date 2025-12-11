@@ -1,7 +1,7 @@
 library(dplyr)
 
 cleandata = function(data) {
-  num_cols <- c("BMI", "GenHlth", "MentHlth", "PhysHlth", "Age", "Education", "Income")
+  num_cols <- c("BMI", "MentHlth", "PhysHlth")
   for (col in names(data)) {
     if (!(col %in% num_cols)) {
       data[[col]] <- as.factor(data[[col]])
