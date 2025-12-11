@@ -12,8 +12,11 @@ library(pROC)
 library(brant)
 library(tidymodels)
 library(parsnip)
+library(irr)      # for QWK (squared weighted kappa)
+library(Metrics)  # for logLoss
 
 source("cleandata.R")
+source("eval.R")
 source("confusionmatrix.R")
 source("partition.R")
 
@@ -44,40 +47,57 @@ train |> count(Diabetes_012)
 set.seed(123)
 folds <- createFolds(train$Diabetes_012, k = 5, list = TRUE)
 
-cv_metrics <- data.frame(Fold = numeric(),
-                         Accuracy = numeric(),
-                         Balanced_Acc = numeric())
+cv_metrics <- data.frame(
+  Fold = numeric(),
+  Accuracy = numeric(),
+  Balanced_Acc = numeric(),
+  QWK = numeric(),
+  LogLoss = numeric(),
+  MAE = numeric(),
+  MacroAUC = numeric()
+)
 
 for (i in seq_along(folds)) {
-  # training / validation split for this fold
   val_idx <- folds[[i]]
   cv_train <- train[-val_idx, ]
   cv_val   <- train[val_idx, ]
-  
-  # fit model (including the HighBP:GenHlth interaction)
+
   mod <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI +
-                 HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth +
-                 Sex + Age + HighBP:GenHlth,
+                HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth +
+                Sex + Age + HighBP:GenHlth,
               data = cv_train, Hess = TRUE)
 
-  # predicted class for validation data
-  preds <- predict(mod, newdata = cv_val, type = "class")
+  pred_class <- predict(mod, newdata = cv_val, type = "class")
+  pred_probs <- as.data.frame(predict(mod, newdata = cv_val, type = "probs"))
   
-  cm <- confusionMatrix(preds, cv_val$Diabetes_012)
-  
-  cv_metrics <- rbind(cv_metrics,
-                      data.frame(Fold = i,
-                                 Accuracy = cm$overall["Accuracy"],
-                                 Balanced_Acc = cm$byClass["Balanced Accuracy"]))
+  cm <- confusionMatrix(pred_class, cv_val$Diabetes_012)
+
+  cv_metrics <- rbind(cv_metrics, data.frame(
+    Fold = i,
+    Accuracy = cm$overall["Accuracy"],
+    Balanced_Acc = cm$byClass["Balanced Accuracy"],
+    QWK = qwk_score(cv_val$Diabetes_012, pred_class),
+    LogLoss = log_loss(cv_val$Diabetes_012, pred_probs),
+    MAE = mae_ord(cv_val$Diabetes_012, pred_class),
+    MacroAUC = macro_auc(cv_val$Diabetes_012, pred_probs)
+  ))
 }
 
 cv_summary <- cv_metrics |>
-  summarise(mean_acc = mean(Accuracy),
-            mean_bal_acc = mean(Balanced_Acc))
+  summarise(
+    mean_acc = mean(Accuracy),
+    mean_bal_acc = mean(Balanced_Acc),
+    mean_qwk = mean(QWK, na.rm = TRUE),
+    mean_logloss = mean(LogLoss),
+    mean_mae = mean(MAE),
+    mean_macro_auc = mean(MacroAUC)
+  )
+
 cv_summary
 ```
 
 ```{r}
+
 final_polr <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI +
                      HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth +
                      Sex + Age + HighBP:GenHlth,
@@ -86,6 +106,23 @@ final_polr <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI +
 # class predictions
 test_pred_class <- predict(final_polr, newdata = test, type = "class")
 confusionMatrix(test_pred_class, test$Diabetes_012)
+```
+
+```{r}
+# New Evaluations
+final_pred_class <- predict(final_polr, newdata = test, type = "class")
+final_pred_probs <- as.data.frame(predict(final_polr, newdata = test, type = "probs"))
+
+final_metrics <- list(
+  Accuracy = confusionMatrix(final_pred_class, test$Diabetes_012)$overall["Accuracy"],
+  Balanced_Acc = confusionMatrix(final_pred_class, test$Diabetes_012)$byClass["Balanced Accuracy"],
+  QWK = qwk_score(test$Diabetes_012, final_pred_class),
+  LogLoss = log_loss(test$Diabetes_012, final_pred_probs),
+  MAE = mae_ord(test$Diabetes_012, final_pred_class),
+  MacroAUC = macro_auc(test$Diabetes_012, final_pred_probs)
+)
+
+final_metrics
 ```
 
 ```{r}
