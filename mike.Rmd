@@ -304,3 +304,29 @@ results <- tibble(
 results
 
 ```
+
+```{r}
+
+library(patchwork)  # for combining plots
+
+p1 <- ggplot(diabetes, aes(x = BMI)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of BMI before downsampling",
+    x = "BMI",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+p2 <- ggplot(train, aes(x = BMI)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of BMI after downsampling",
+    x = "BMI",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+# Display
+p1 / p2
+```
