@@ -24,7 +24,7 @@ The primary goal of this project is to develop predictive models that estimate a
 
 Although the data are from 2015, understanding the relationships between different health indicators and the risk of prediabetes and diabetes can help inform public health officials, healthcare providers, and researchers. The hope is that this research can help identify high-risk populations, guide doctor-patient conversations, and better inform the public about early-intervention strategies.
 
-To achieve these goals, we combine exploratory data analysis, feature selection, and predictive modeling. The analysis begins by examining the distributions of health indicators and their associations with diabetes status, followed by an assessment of interaction effects and variable transformations to improve model performance. Finally, we train and evaluate ordinal logistic regression models using cross-validation and report key metrics such as accuracy, balanced accuracy, and log-loss. This approach provides insights into the most predictive health indicators and offers guidance for both clinical practice and public health interventions.
+To achieve these goals, we combine exploratory data analysis (EDA), feature selection, and predictive modeling. The analysis starts with an examination of the distributions of key health indicators and their associations with diabetes status, followed by an assessment of useful interaction effects and variable transformations. We then train and evaluate ordinal logistic regression models using k-fold cross-validation. Model selection is based on threshold-independent metrics such as quadratic weighted kappa, log loss, mean absolute error, and macro AUC. Once the best model is chosen, threshold-dependent metrics such as ROC, F1, precision, and recall can be used to determine an optimal probability cutoff. This framework provides insights into the most predictive health indicators and supports both clinical practice and public health applications.
 
 # Methodology
 
@@ -41,15 +41,21 @@ source("./confusionmatrix.R")
 
 ## Data Description / Distribution
 
--   Goal is to correctly identify cases of diabetes.
-
--   Wish to predict 3 cases.
-
 -   Used diabetes \_ 012 \_ health \_ indicators.csv dataset
 
--   We model these statistics using an ordinal multinomal logistic regression model to capture the ordinal relationship (or severity levels of) non-diabetes (0), prediabetes (1), and diabetes (2).
+clean dataset
 
--   Note that diabetes in this study is mostly type 2 (I think)
+clean dataset of 253,680 survey responses to the CDC's BRFSS2015. The target variable Diabetes_012 has 3 classes. 0 is for no diabetes or only during pregnancy, 1 is for prediabetes, and 2 is for diabetes. There is class imbalance in this dataset. This dataset has 21 feature variables
+
+Data cleaning
+
+Goal is to correctly identify cases of diabetes.
+
+Wish to predict 3 cases.
+
+We model these statistics using an ordinal multinomal logistic regression model to capture the ordinal relationship (or severity levels of) non-diabetes (0), prediabetes (1), and diabetes (2).
+
+Note that diabetes in this study is mostly type 2 (I think)
 
 ## Transformations
 
