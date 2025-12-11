@@ -11,6 +11,7 @@ library(caret)
 library(pROC)
 library(tidymodels)
 library(themis)
+library(brant)
 
 source("cleandata.R")
 source("confusionmatrix.R")
@@ -21,6 +22,7 @@ diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
 diabetes <- cleandata(diabetes_raw)
 head(diabetes)
 ```
+
 
 ```{r}
 diabetes |> count(Diabetes_012)
@@ -39,16 +41,25 @@ train |> count(Diabetes_012)
 
 ```{r}
 model_polr <- polr(
-  Diabetes_012 ~ .^2,
+  Diabetes_012 ~ Age * BMI + Sex + HighChol + HighBP,
   data = train,
   Hess = TRUE,
 )
 ```
 
 ```{r}
-coefs <- coef(summary(model_polr))
-pvals <- pnorm(abs(coefs[, "t value"]), lower.tail = FALSE) * 2
-summary <- cbind(coefs, "p value" = pvals)
+pvalues <- function (model, threshold = 0.05) {
+  coefs <- as.data.frame(coef(summary(model_polr)))
+  pvals <- pnorm(abs(coefs[, "t value"]), lower.tail = FALSE) * 2
+  significant <- if_else(pvals < threshold, "*", "")
+  summary <- cbind(coefs, "p value" = pvals, "sig" = significant)
+  return(summary)
+}
+```
+
+
+```{r}
+pvalues(model_polr, 0.01)
 ```
 
 ```{r}
@@ -78,7 +89,7 @@ auc(roc_no); auc(roc_pre); auc(roc_dia)
 ```
 
 ```{r}
-target <- 0.9
+target <- 0.7
 avail <- roc_pre$sensitivities
 closest <- avail[which.min(abs(avail - target))]
 coords(roc_pre, x = closest, input = "sensitivity", ret = c("threshold", "specificity", "sensitivity"))
@@ -93,5 +104,9 @@ t_diab <- 0.3
 
 cm <- create_cm(pred_df, t_pre, t_diab, diabetes)
 plot_cm(cm)
+```
+
+```{r}
+brant(model_polr)
 ```
 
