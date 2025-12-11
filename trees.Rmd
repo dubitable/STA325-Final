@@ -4,17 +4,14 @@ output: pdf_document
 ---
 
 ```{r}
-library(MASS)
-library(e1071)
-library(car)
+set.seed(123)
+
 library(caret)
-library(pROC)
-library(tidymodels)
-library(themis)
 library(randomForest)
 
 source("cleandata.R")
 source("confusionmatrix.R")
+source("partition.R")
 ```
 
 ```{r}
@@ -28,12 +25,9 @@ diabetes |> count(Diabetes_012)
 ```
 
 ```{r}
-rec <- recipe(Diabetes_012 ~ ., data = diabetes) |>
-  step_downsample(Diabetes_012)
-
-rec_prep <- prep(rec)
-
-train <- bake(rec_prep, new_data = NULL)
+split <- partition(diabetes, 0.8)
+train <- split$train
+test <- split$test
 
 train |> count(Diabetes_012)
 ```
@@ -43,8 +37,8 @@ rf.model <- randomForest(Diabetes_012 ~ ., data = train, importance = TRUE)
 ```
 
 ```{r}
-pred <- predict(rf.model, newdata = diabetes)
-cm <- confusionMatrix(pred, diabetes$Diabetes_012) 
+pred <- predict(rf.model, newdata = test)
+cm <- confusionMatrix(pred, test$Diabetes_012) 
 plot_cm(cm)
 ```
 

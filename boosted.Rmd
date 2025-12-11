@@ -4,16 +4,14 @@ output: html_document
 ---
 
 ```{r}
+set.seed(123)
+
 library(MASS)
-library(e1071)
-library(car)
 library(caret)
-library(pROC)
-library(tidymodels)
-library(themis)
 library(xgboost)
 
 source("cleandata.R")
+source("partition.R")
 source("confusionmatrix.R")
 ```
 
@@ -28,12 +26,9 @@ diabetes |> count(Diabetes_012)
 ```
 
 ```{r}
-rec <- recipe(Diabetes_012 ~ ., data = diabetes) |>
-  step_downsample(Diabetes_012)
-
-rec_prep <- prep(rec)
-
-train <- bake(rec_prep, new_data = NULL)
+split <- partition(diabetes, 0.8)
+train <- split$train
+test <- split$test
 
 train |> count(Diabetes_012)
 ```
@@ -46,19 +41,20 @@ xgb.model <- xgboost(
   x = train_matrix,
   y = label,
   objective = "multi:softprob",
-  eval_metric = "mlogloss"
+  eval_metric = "mlogloss",
+  nrounds = 500L
 )
 ```
 
 ```{r}
-test_matrix <- model.matrix(Diabetes_012 ~ . - 1, data = diabetes)
+test_matrix <- model.matrix(Diabetes_012 ~ . - 1, data = test)
 pred <- predict(xgb.model, newdata = test_matrix)
 pred <- matrix(pred, ncol = 3, byrow = TRUE)
 pred.class <- factor(max.col(pred) - 1, labels = c("NoDiabetes", "PreDiabetes", "Diabetes"))
 ```
 
 ```{r}
-cm <- confusionMatrix(pred.class, diabetes$Diabetes_012) 
+cm <- confusionMatrix(pred.class, test$Diabetes_012) 
 plot_cm(cm)
 ```
 

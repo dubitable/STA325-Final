@@ -4,17 +4,14 @@ output: html_document
 ---
 
 ```{r}
-library(MASS)
-library(e1071)
-library(car)
+set.seed(123)
+
 library(caret)
-library(pROC)
-library(tidymodels)
-library(themis)
 library(ordinalForest)
 
 source("cleandata.R")
 source("confusionmatrix.R")
+source("partition.R")
 ```
 
 ```{r}
@@ -28,34 +25,30 @@ diabetes |> count(Diabetes_012)
 ```
 
 ```{r}
-rec <- recipe(Diabetes_012 ~ ., data = diabetes) |>
-  step_downsample(Diabetes_012)
-
-rec_prep <- prep(rec)
-
-train <- bake(rec_prep, new_data = NULL)
+split <- partition(diabetes, 0.8)
+train <- split$train
+test <- split$test
 
 train |> count(Diabetes_012)
 ```
 
 ```{r}
-of.model <- ordfor(depvar = "Diabetes_012", data = as.data.frame(train))
+#of.model <- ordfor(depvar = "Diabetes_012", data = as.data.frame(train))
 #save(of.model, file = "ordforest.RData")
 ```
 
 
 ```{r}
-#load("ordforest.RData")
+load("ordforest.RData")
 ```
 
 ```{r}
-sampled <- sample(nrow(diabetes), 10000)
-pred <- predict(of.model, newdata = diabetes[sampled, ])
+pred <- predict(of.model, newdata = test)
 ```
 
 
 ```{r}
-cm <- confusionMatrix(pred$ypred, diabetes[sampled, ]$Diabetes_012) 
+cm <- confusionMatrix(pred$ypred, test$Diabetes_012) 
 plot_cm(cm)
 ```
 

@@ -4,6 +4,8 @@ output: pdf_document
 ---
 
 ```{r}
+set.seed(123)
+
 library(MASS)
 library(e1071)
 library(car)
@@ -37,24 +39,26 @@ train |> count(Diabetes_012)
 
 ```{r}
 model_polr <- polr(
-  Diabetes_012 ~ .,
+  Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI + HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth + Sex + Age + HighBP:GenHlth,
   data = train,
   Hess = TRUE,
 )
 ```
 
 ```{r}
-n <- nrow(train)
-model_polr_stepBIC <- stepAIC(
-  model_polr,
-  direction = "both",
-  k = log(n)
-)
+#n <- nrow(train)
+#model_polr_stepBIC <- stepAIC(
+#  model_polr,
+#  direction = "both",
+#  scope = list(lower = ~1, upper = ~ .^2),
+#  k = log(n)
+#)
 ```
 
 
 ```{r}
-model_polr <- model_polr_step
+#model_polr <- model_polr_stepBIC
+summary(model_polr)
 ```
 
 
@@ -115,6 +119,7 @@ t_pre <- 0.5
 t_diab <- 0.3
 
 cm <- create_cm(pred_df, t_pre, t_diab, test)
+cm$table
 plot_cm(cm)
 ```
 

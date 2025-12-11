@@ -4,15 +4,13 @@ output: pdf_document
 ---
 
 ```{r}
-library(MASS)
+set.seed(123)
+
 library(e1071)
-library(car)
 library(caret)
-library(pROC)
-library(tidymodels)
-library(themis)
 
 source("cleandata.R")
+source("partition.R")
 source("confusionmatrix.R")
 ```
 
@@ -27,12 +25,9 @@ diabetes |> count(Diabetes_012)
 ```
 
 ```{r}
-rec <- recipe(Diabetes_012 ~ ., data = diabetes) |>
-  step_downsample(Diabetes_012)
-
-rec_prep <- prep(rec)
-
-train <- bake(rec_prep, new_data = NULL)
+split <- partition(diabetes, 0.8)
+train <- split$train
+test <- split$test
 
 train |> count(Diabetes_012)
 ```
@@ -41,16 +36,31 @@ train |> count(Diabetes_012)
 svm.model <- svm(
   Diabetes_012 ~ .,
   data = train,
-  kernel="radial"
+  kernel = "radial",
+  cost = 100,
+  gamma = 0.001
 )
+```
+
+```{r}
+#tune.out <- e1071::tune(
+#  svm,
+#  Diabetes_012 ~ .,
+#  data = train,
+#  kernel = "radial",
+#  ranges = list(
+#    cost = c(0.1, 1, 10, 100),
+#    gamma = c(0.001, 0.01, 0.1, 1)
+#  )
+#)
 ```
 
 ```{r}
 summary(svm.model)
 ```
 ```{r}
-pred <- predict(svm.model, newdata = diabetes)
-cm <- confusionMatrix(pred, diabetes$Diabetes_012) 
+pred <- predict(svm.model, newdata = test)
+cm <- confusionMatrix(pred, test$Diabetes_012) 
 plot_cm(cm)
 ```
 
