@@ -22,7 +22,6 @@ diabetes <- cleandata(diabetes_raw)
 head(diabetes)
 ```
 
-
 ```{r}
 diabetes |> count(Diabetes_012)
 ```
@@ -52,12 +51,9 @@ model_polr_stepBIC <- stepAIC(
 )
 ```
 
-
 ```{r}
 model_polr <- model_polr_step
 ```
-
-
 
 ```{r}
 pvalues <- function (model, threshold = 0.05) {
@@ -68,7 +64,6 @@ pvalues <- function (model, threshold = 0.05) {
   return(summary)
 }
 ```
-
 
 ```{r}
 pvalues(model_polr, 0.01)
@@ -121,5 +116,3 @@ plot_cm(cm)
 ```{r}
 brant(model_polr)
 ```
-
-
