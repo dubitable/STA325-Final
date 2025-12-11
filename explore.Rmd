@@ -44,7 +44,12 @@ model_polr <- polr(
 ```
 
 ```{r}
-
+n <- nrow(train)
+model_polr_stepBIC <- stepAIC(
+  model_polr,
+  direction = "both",
+  k = log(n)
+)
 ```
 
 
