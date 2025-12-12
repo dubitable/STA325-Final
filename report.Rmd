@@ -95,6 +95,10 @@ diabetes |> count(Diabetes_012)
 
 After building intuition for the underlying feature distributions, our group experimented with various model types, transformations, and predictors to get best predictive accuracy.
 
+## Feature Selection
+
+The cleaned data set includes 21 feature variables. Many of these variables are highly correlated (eg. fruit consumption vs vegetable consumption), which can lead to multicollinearity. Hence, we first performed Ordinal Lasso Regression. We chose Lasso over Ridge is because since many of the coefficients already have such low coefficient values, we Lasso would actually bring coefficients
+
 ## Transformations
 
 [Krish's work]
@@ -111,7 +115,9 @@ replace with final model
 
 $$
 Diabetes \sim HighBP + HighChol + CholCheck + BMI + HeartDisease + HeavyAlc + GenHlth + Sex + Age + HighBP:GenHlth
-$$ \## Other Methods: Black Box Models (remove if we decide not to use)
+$$
+
+## Other Methods: Black Box Models (remove if we decide not to use)
 
 While our main focus was to develop a model on a subset of predictors that allowed for interpretation of the driving factors of diabetes risk, we also considered several "black box" models that focused on predictive power rather than inference. - Random Forests: - Ordinal Forests: - Boosted Tree: - Support Vector Machine (SVM):
 
