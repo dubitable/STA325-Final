@@ -134,8 +134,39 @@ fit_lasso <- ordinalNet(
 
 coef(fit_lasso)
 
+```
+```{r}
+coef_vec <- coef(fit_lasso)
 
-
+tibble(
+  term = names(coef_vec),
+  estimate = as.numeric(coef_vec)
+) %>%
+  # remove cutpoints
+  filter(!str_detect(term, "Intercept")) %>%
+  
+  # clean names
+  mutate(
+    term = term %>%
+      str_replace("\\d+$", "") %>%
+      str_replace_all("([a-z])([A-Z])", "\\1 \\2")
+  ) %>%
+  
+  # keep meaningful effects only (lasso-style)
+  filter(abs(estimate) > 0.1) %>%
+  arrange(estimate) %>%
+  
+  # plot
+  ggplot(aes(x = estimate, y = fct_reorder(term, estimate))) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(size = 3, color = "steelblue") +
+  labs(
+    title = "Key Predictors of Diabetes Severity",
+    subtitle = "Ordinal Logistic Regression with LASSO Regularization",
+    x = "Log-Odds Effect",
+    y = ""
+  ) +
+  theme_minimal(base_size = 14)
 ```
 
 
@@ -143,7 +174,8 @@ coef(fit_lasso)
 ```{r}
 
 library(tidyverse)
-library(MASS)      # for polr()
+library(MASS)      # 
+for polr()
 # library(rms)       # for restricted cubic splines (rcs)
 library(brant)     # proportional odds testing
 
@@ -242,6 +274,8 @@ all_results <- map_df(numeric_vars, ~ {
 
 all_results %>% arrange(variable, AIC)
 
+
+
 ```
 
 
@@ -264,11 +298,6 @@ df$Diabetes_012 <- factor(df$Diabetes_012,
 # 1. Log BMI
 df$logBMI <- log(df$BMI)
 
-# 2. Collapse Age into 3 categories:
-#    (example grouping; adjust if needed)
-#    1–4   = Young (roughly 18–34)
-#    5–9   = Middle-aged (35–64)
-#    10–13 = Older adults (65+)
 df$Age_num <- as.numeric(as.character(df$Age))
 df$Age3 <- cut(df$Age_num,
                breaks = c(0, 4, 9, 13),
@@ -312,8 +341,6 @@ model_formula <- Diabetes_012 ~
 
 
 ```{r}
-
-
 
 final_model <- polr(model_formula, 
                     data = df, 
@@ -495,14 +522,84 @@ prop.table(table(parts$train$Diabetes_012))
 
 table(parts$test$Diabetes_012)
 
+library(ggplot2)
+
+ggplot(parts$train, aes(x = logBMI_c)) +
+  geom_histogram(
+    bins = 30,
+    fill = "steelblue",
+    color = "white"
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Distribution of Centered log(BMI) After Downsampling (Training Set)",
+    x = "BMI",
+    y = "Count"
+  )
+
+
 
 ```
+```{r}
+
+parts$train
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# ============================================================
+# Interaction plot: HighBP × HighChol (polr, safe version)
+# ============================================================
+
+# 1. Start from a real training observation (keeps all types correct)
+base_row <- parts$train[1, ]
+
+# 2. Create interaction grid
+newdat <- bind_rows(base_row, base_row, base_row, base_row)
+
+newdat$HighBP   <- factor(c(0, 0, 1, 1), levels = levels(parts$train$HighBP))
+newdat$HighChol <- factor(c(0, 1, 0, 1), levels = levels(parts$train$HighChol))
+
+# 3. Predict probabilities
+pred_probs <- predict(model2, newdat, type = "probs")
+
+# 4. Identify the highest diabetes category automatically
+highest_level <- colnames(pred_probs)[ncol(pred_probs)]
+
+# 5. Bind probabilities
+newdat <- cbind(newdat, pred_probs)
+
+# 6. Plot interaction
+ggplot(newdat, aes(
+  x = HighBP,
+  y = .data[[highest_level]],
+  color = HighChol,
+  group = HighChol
+)) +
+  geom_point(size = 3) +
+  geom_line() +
+  theme_minimal() +
+  labs(
+    title = "Interaction Effect of HighBP × HighChol",
+    x = "High Blood Pressure",
+    y = paste("Predicted Probability of Diabetes (Level", highest_level, ")"),
+    color = "High Cholesterol"
+  )
+
+
+```
+
+
+
 ```{r}
 
 model2 <- polr(
   Diabetes_012 ~ 
   logBMI_c + Age3 + HighBP + HighChol + 
-  Smoker + Stroke + HeartDiseaseorAttack + Fruits + Veggies + 
+  Smoker + Stroke + HeartDiseaseorAttack + 
   HvyAlcoholConsump + AnyHealthcare + NoDocbcCost + GenHlth + DiffWalk + Sex + Income  +
   HighBP:HighChol,
   data = parts$train,
@@ -667,6 +764,63 @@ weighted_f1 <- sum(f1_scores * class_weights)
 
 cat("\nWeighted F1:", weighted_f1, "\n")
 
+
+
+```
+
+```{r}
+
+
+library(pROC)
+library(ggplot2)
+
+# --------------------------------------------
+# One-vs-Rest ROC curves for each class
+# --------------------------------------------
+
+# Ensure class order consistency
+true_f <- factor(parts$test$Diabetes_012, levels = colnames(pred_bal_prob))
+
+# Compute ROC for each class
+roc_list <- lapply(colnames(pred_bal_prob), function(cls) {
+  roc(
+    response = as.numeric(true_f == cls),
+    predictor = pred_bal_prob[, cls],
+    quiet = TRUE
+  )
+})
+
+names(roc_list) <- colnames(pred_bal_prob)
+
+# --------------------------------------------
+# Convert ROC objects to a data frame for ggplot
+# --------------------------------------------
+
+roc_df <- do.call(
+  rbind,
+  lapply(names(roc_list), function(cls) {
+    data.frame(
+      FPR = 1 - roc_list[[cls]]$specificities,
+      TPR = roc_list[[cls]]$sensitivities,
+      Class = cls
+    )
+  })
+)
+
+# --------------------------------------------
+# Plot ROC curves
+# --------------------------------------------
+
+ggplot(roc_df, aes(x = FPR, y = TPR, color = Class)) +
+  geom_line(size = 1) +
+  geom_abline(linetype = "dashed", color = "gray50") +
+  coord_equal() +
+  theme_minimal() +
+  labs(
+    title = "One-vs-Rest ROC Curves (Ordinal Logistic Model)",
+    x = "False Positive Rate",
+    y = "True Positive Rate"
+  )
 
 
 ```
