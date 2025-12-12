@@ -81,7 +81,7 @@ diabetes %>%
 ```
 
 ```{r}
-ggplot(diabetes, aes(x = GenHlth, fill = Diabetes_012)) +
+ggplot(diabetes, aes(x = Age, fill = Diabetes_012)) +
   geom_bar(position = "fill") +  # normalized proportions
   labs(y = "Proportion")
 
@@ -312,7 +312,7 @@ library(patchwork)  # for combining plots
 p1 <- ggplot(diabetes, aes(x = BMI)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   labs(
-    title = "Distribution of BMI before downsampling",
+    title = "Distribution of BMI (before downsampling)",
     x = "BMI",
     y = "Count"
   ) +
@@ -321,7 +321,7 @@ p1 <- ggplot(diabetes, aes(x = BMI)) +
 p2 <- ggplot(train, aes(x = BMI)) +
   geom_histogram(bins = 30, fill = "steelblue", color = "white") +
   labs(
-    title = "Distribution of BMI after downsampling",
+    title = "Distribution of BMI (after downsampling)",
     x = "BMI",
     y = "Count"
   ) +
@@ -329,4 +329,26 @@ p2 <- ggplot(train, aes(x = BMI)) +
 
 # Display
 p1 / p2
+```
+
+```{r}
+a1 <- ggplot(diabetes, aes(x = MentHlth)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of MentHlth (before downsampling)",
+    x = "MentHlth",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+a2 <- ggplot(diabetes, aes(x = PhysHlth)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of PhysHlth (before downsampling)",
+    x = "PhysHlth",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+a1 / a2
 ```
