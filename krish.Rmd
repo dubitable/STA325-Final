@@ -12,11 +12,479 @@ library(Metrics)  # for logLoss
 source("cleandata.R")
 source("eval.R")
 source("confusionmatrix.R")
-source("partition.R")
 
 diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
 diabetes <- cleandata(diabetes_raw)
-head(diabetes)
+summary(diabetes)
+
+
+
+```
+
+```{r}
+
+df <- diabetes
+
+library(tidyverse)
+
+# Treat outcome as a factor
+df$Diabetes_012 <- factor(df$Diabetes_012,
+                          levels = c("NoDiabetes", "PreDiabetes", "Diabetes"))
+
+ggplot(df, aes(x = Diabetes_012)) +
+  geom_bar(fill = "purple", alpha = 0.7) +
+  theme_minimal(base_size = 14) +
+  labs(title = "Outcome: Diabetes_012", x = "Class", y = "Count")
+
+
+ggplot(df, aes(x = factor(HighBP))) +
+  geom_bar(fill = "darkorange", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "HighBP", x = "HighBP", y = "Frequency")
+
+
+ggplot(df, aes(x = factor(HighChol))) +
+  geom_bar(fill = "darkorange", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "HighChol", x = "HighChol", y = "Frequency")
+
+
+ggplot(df, aes(x = factor(CholCheck))) +
+  geom_bar(fill = "darkorange", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "CholCheck", x = "CholCheck", y = "Frequency")
+
+ggplot(df, aes(x = factor(Smoker))) +
+  geom_bar(fill = "darkorange", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Smoker", x = "Smoker", y = "Frequency")
+
+ggplot(df, aes(x = factor(Stroke))) +
+  geom_bar(fill = "darkorange", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Stroke", x = "Stroke", y = "Frequency")
+
+
+ggplot(df, aes(x = BMI)) +
+  geom_histogram(bins = 40, fill = "steelblue", alpha = 0.7) +
+  geom_density(color = "red", linewidth = 1) +
+  theme_minimal() +
+  labs(title = "BMI", x = "BMI", y = "Count")
+
+
+
+```
+
+```{r}
+
+ggplot(df, aes(x = MentHlth)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "MentHlth (Days)", y = "Count")
+
+
+ggplot(df, aes(x = PhysHlth)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "PhysHlth (Days)", y = "Count")
+
+ggplot(df, aes(x = factor(Age))) +
+  geom_bar(fill = "steelblue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Age Categories", x = "Age Code", y = "Frequency")
+
+ggplot(df, aes(x = factor(Education))) +
+  geom_bar(fill = "steelblue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Education", x = "Education Level", y = "Frequency")
+
+
+ggplot(df, aes(x = factor(Income))) +
+  geom_bar(fill = "steelblue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Income", x = "Income Category", y = "Frequency")
+
+
+
+```
+
+
+
+```{r}
+
+
+library(MASS)
+
+base_model <- polr(Diabetes_012 ~ ., data = df, method = "logistic", Hess = TRUE)
+summary(base_model)
+```
+
+
+```{r}
+
+library(ordinalNet)
+
+fit_lasso <- ordinalNet(
+  x = model.matrix(Diabetes_012 ~ . , df)[, -1],
+  y = df$Diabetes_012,
+  family = "cumulative",
+  link = "logit",
+  alpha = 1
+)
+
+coef(fit_lasso)
+
+
+
+```
+
+
+
+```{r}
+
+library(tidyverse)
+library(MASS)      # for polr()
+# library(rms)       # for restricted cubic splines (rcs)
+library(brant)     # proportional odds testing
+
+df$Diabetes_012 <- factor(df$Diabetes_012,
+                          levels = c("NoDiabetes", "PreDiabetes", "Diabetes"),
+                          ordered = TRUE)
+
+test_transforms <- function(varname, data, knots = 4) {
+  
+  f_lin  <- as.formula(paste0("Diabetes_012 ~ ", varname))
+  f_log  <- as.formula(paste0("Diabetes_012 ~ log(", varname, " + 1)"))
+  f_sqrt <- as.formula(paste0("Diabetes_012 ~ sqrt(", varname, ")"))
+#  f_rcs  <- as.formula(paste0("Diabetes_012 ~ rcs(", varname, ", ", knots, ")"))
+  
+  m_lin  <- polr(f_lin,  data = data, method = "logistic", Hess = TRUE)
+  m_log  <- polr(f_log,  data = data, method = "logistic", Hess = TRUE)
+  m_sqrt <- polr(f_sqrt, data = data, method = "logistic", Hess = TRUE)
+#  m_rcs  <- polr(f_rcs,  data = data, method = "logistic", Hess = TRUE)
+  
+  tibble(
+    transformation = c("linear", "log", "sqrt"),
+    AIC = c(AIC(m_lin), AIC(m_log), AIC(m_sqrt))
+  )
+}
+
+results_BMI <- test_transforms("BMI", df)
+results_BMI
+
+
+# Convert BRFSS-style age codes to approximate numeric midpoints
+age_midpoints <- c(22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82)
+df$Age_num <- age_midpoints[df$Age]
+
+results_Age <- test_transforms("Age_num", df)
+results_Age
+
+
+df$MentHlth_grp <- cut(df$MentHlth,
+                       breaks = c(-Inf, 0, 7, 14, Inf),
+                       labels = c("0", "1-7", "8-14", "15+"),
+                       ordered_result = TRUE)
+
+df$PhysHlth_grp <- cut(df$PhysHlth,
+                       breaks = c(-Inf, 0, 7, 14, Inf),
+                       labels = c("0", "1-7", "8-14", "15+"),
+                       ordered_result = TRUE)
+
+
+df$MentHlth_grp <- cut(df$MentHlth,
+                       breaks = c(-Inf, 0, 7, 14, Inf),
+                       labels = c("0", "1-7", "8-14", "15+"),
+                       ordered_result = TRUE)
+
+df$PhysHlth_grp <- cut(df$PhysHlth,
+                       breaks = c(-Inf, 0, 7, 14, Inf),
+                       labels = c("0", "1-7", "8-14", "15+"),
+                       ordered_result = TRUE)
+
+m_raw  <- polr(Diabetes_012 ~ MentHlth, df, method = "logistic")
+m_grp  <- polr(Diabetes_012 ~ MentHlth_grp, df, method = "logistic")
+
+AIC(m_raw, m_grp)
+
+
+
+df$Income_num <- as.numeric(df$Income)
+
+results_Income <- test_transforms("Income_num", df)
+results_Income
+
+
+m_ord  <- polr(Diabetes_012 ~ GenHlth, df, method = "logistic")
+m_fact <- polr(Diabetes_012 ~ factor(GenHlth), df, method = "logistic")
+
+AIC(m_ord, m_fact)
+
+
+
+
+```
+
+
+
+
+```{r}
+
+
+
+numeric_vars <- c("BMI", "Age_num", "MentHlth", "PhysHlth", "Income_num")
+
+all_results <- map_df(numeric_vars, ~ {
+  out <- test_transforms(.x, df)
+  out$variable <- .x
+  out
+})
+
+all_results %>% arrange(variable, AIC)
+
+```
+
+
+
+
+```{r}
+
+library(tidyverse)
+library(MASS)   # polr()
+
+# Ensure outcome is ordered
+df$Diabetes_012 <- factor(df$Diabetes_012,
+                          levels = c("NoDiabetes", "PreDiabetes", "Diabetes"),
+                          ordered = TRUE)
+
+# -----------------------------
+# TRANSFORMATIONS
+# -----------------------------
+
+# 1. Log BMI
+df$logBMI <- log(df$BMI)
+
+# 2. Collapse Age into 3 categories:
+#    (example grouping; adjust if needed)
+#    1–4   = Young (roughly 18–34)
+#    5–9   = Middle-aged (35–64)
+#    10–13 = Older adults (65+)
+df$Age_num <- as.numeric(as.character(df$Age))
+df$Age3 <- cut(df$Age_num,
+               breaks = c(0, 4, 9, 13),
+               labels = c("Young", "Middle", "Old"),
+               ordered_result = FALSE)   # <-- FIX: make it an UNORDERED factor
+
+
+
+# Make binary factors explicit
+df$HighBP    <- factor(df$HighBP)
+df$HighChol  <- factor(df$HighChol)
+df$PhysActivity <- factor(df$PhysActivity)
+df$Smoker    <- factor(df$Smoker)
+df$Stroke    <- factor(df$Stroke)
+df$HeartDiseaseorAttack <- factor(df$HeartDiseaseorAttack)
+df$Fruits    <- factor(df$Fruits)
+df$Veggies   <- factor(df$Veggies)
+df$HvyAlcoholConsump <- factor(df$HvyAlcoholConsump)
+df$AnyHealthcare <- factor(df$AnyHealthcare)
+df$NoDocbcCost <- factor(df$NoDocbcCost)
+df$DiffWalk  <- factor(df$DiffWalk)
+df$Sex       <- factor(df$Sex)
+df$GenHlth   <- ordered(df$GenHlth)
+df$Income    <- ordered(df$Income)
+df$logBMI_c <- scale(df$logBMI, center = TRUE, scale = FALSE)
+df$Age3 <- relevel(df$Age3, ref = "Young")
+contrasts(df$Age3) <- contr.treatment(3)
+
+
+
+model_formula <- Diabetes_012 ~ 
+  logBMI_c + Age3 + HighBP + HighChol + 
+  Smoker + Stroke + HeartDiseaseorAttack + Fruits + Veggies + 
+  HvyAlcoholConsump + AnyHealthcare + NoDocbcCost + GenHlth + DiffWalk + Sex + Income  +
+
+  # Interaction terms:
+  HighBP:HighChol
+
+
+```
+
+
+```{r}
+
+
+
+final_model <- polr(model_formula, 
+                    data = df, 
+                    method = "logistic",
+                    Hess = TRUE)
+
+summary(final_model)
+
+```
+```{r}
+
+pierre <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI + HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth + Sex + Age3 + HighBP:GenHlth, data = df, method = "logistic",Hess = TRUE)
+
+summary(pierre)
+
+```
+
+```{r}
+
+str(df)
+
+```
+
+
+
+```{r}
+
+library(MASS)
+library(tidyverse)
+library(caret)
+library(pROC)
+library(MLmetrics)   # for log-loss
+
+set.seed(123)
+
+train_index <- createDataPartition(df$Diabetes_012, p = 0.8, list = FALSE)
+train <- df[train_index, ]
+test  <- df[-train_index, ]
+
+model1 <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI +
+                 HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth +
+                 Sex + Age3 + HighBP:GenHlth,
+               data = train, method = "logistic", Hess = TRUE)
+
+
+model2 <- polr(Diabetes_012 ~ logBMI_c + Age3 + HighBP + HighChol +
+                 PhysActivity + Smoker + Stroke + HeartDiseaseorAttack +
+                 Fruits + Veggies + HvyAlcoholConsump + AnyHealthcare +
+                 NoDocbcCost + GenHlth + DiffWalk + Sex + Income +
+                 logBMI_c:PhysActivity + HighBP:HighChol,
+               data = train, method = "logistic", Hess = TRUE)
+
+
+```
+
+```{r}
+
+# =============================
+# 1. Generate Predictions
+# =============================
+
+pred1_class <- predict(model1, newdata = test, type = "class")
+pred2_class <- predict(model2, newdata = test, type = "class")
+
+pred1_prob <- predict(model1, newdata = test, type = "probs")
+pred2_prob <- predict(model2, newdata = test, type = "probs")
+
+# =============================
+# 2. Convert true + predicted classes to SAFE factors
+# =============================
+
+# Drop "ordered" and enforce identical levels
+true_class  <- as.character(test$Diabetes_012)
+pred1_chr   <- as.character(pred1_class)
+pred2_chr   <- as.character(pred2_class)
+
+common_levels <- levels(df$Diabetes_012)  # Ideal consistent levels
+
+true  <- factor(true_class,  levels = common_levels)
+pred1 <- factor(pred1_chr,   levels = common_levels)
+pred2 <- factor(pred2_chr,   levels = common_levels)
+
+# =============================
+# 3. Accuracy
+# =============================
+acc1 <- mean(pred1 == true)
+acc2 <- mean(pred2 == true)
+
+cat("Model 1 Accuracy:", acc1, "\n")
+cat("Model 2 Accuracy:", acc2, "\n")
+
+# =============================
+# 4. Confusion Matrices (must use pred1 and true, NOT pred1_class)
+# =============================
+library(caret)
+
+cat("\nModel 1 Confusion Matrix:\n")
+print(confusionMatrix(pred1, true))
+
+cat("\nModel 2 Confusion Matrix:\n")
+print(confusionMatrix(pred2, true))
+
+# =============================
+# 5. Multiclass AUC (must use raw factors, not ordered)
+# =============================
+library(pROC)
+
+auc1 <- multiclass.roc(true, pred1_prob)$auc
+auc2 <- multiclass.roc(true, pred2_prob)$auc
+
+cat("\nModel 1 Multiclass AUC:", auc1, "\n")
+cat("Model 2 Multiclass AUC:", auc2, "\n")
+
+# =============================
+# 6. Log-loss (requires numeric labels 1,2,3)
+# =============================
+library(MLmetrics)
+
+y_true <- as.numeric(true)
+
+logloss1 <- MultiLogLoss(pred1_prob, y_true)
+logloss2 <- MultiLogLoss(pred2_prob, y_true)
+
+cat("\nModel 1 LogLoss:", logloss1, "\n")
+cat("Model 2 LogLoss:", logloss2, "\n")
+
+# =============================
+# 7. Comparison Table
+# =============================
+
+comparison <- tibble(
+  Metric = c("Accuracy", "Multiclass AUC", "LogLoss (lower better)"),
+  Model1 = c(acc1, auc1, logloss1),
+  Model2 = c(acc2, auc2, logloss2)
+)
+
+print(comparison)
+
+
+
+```
+
+
+
+```{r}
+
+library(tidymodels)
+library(themis)
+library(caret)     # for createDataPartition
+
+partition <- function(data, p = 0.8) {
+  
+  # 1. Stratified train/test split
+  set.seed(123)
+  trainidx <- createDataPartition(data$Diabetes_012, p = p, list = FALSE)
+  
+  train_raw <- data[trainidx, ]
+  test      <- data[-trainidx, ]
+  
+  # 2. Create recipe that downsamples ONLY the training set
+  rec <- recipe(Diabetes_012 ~ ., data = train_raw) %>%
+    step_downsample(Diabetes_012)
+  
+  # 3. Prep and bake the recipe
+  rec_prep <- prep(rec)
+  train <- bake(rec_prep, new_data = NULL)
+  
+  # 4. Return list
+  return(list(train = train, test = test))
+}
+
 
 
 
