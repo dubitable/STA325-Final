@@ -460,7 +460,7 @@ print(comparison)
 
 ```{r}
 
-library(tidymodels)
+# library(tidymodels)
 library(themis)
 library(caret)     # for createDataPartition
 
@@ -485,6 +485,122 @@ partition <- function(data, p = 0.8) {
   return(list(train = train, test = test))
 }
 
+
+
+
+parts <- partition(df)
+
+table(parts$train$Diabetes_012)
+prop.table(table(parts$train$Diabetes_012))
+
+table(parts$test$Diabetes_012)
+
+
+```
+```{r}
+
+model2 <- polr(
+  Diabetes_012 ~ 
+  logBMI_c + Age3 + HighBP + HighChol + 
+  Smoker + Stroke + HeartDiseaseorAttack + Fruits + Veggies + 
+  HvyAlcoholConsump + AnyHealthcare + NoDocbcCost + GenHlth + DiffWalk + Sex + Income  +
+
+  # Interaction terms:
+  HighBP:HighChol,
+  data = parts$train,
+  method = "logistic",
+  Hess = TRUE
+)
+
+model1 <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI +
+                 HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth +
+                 Sex + Age3 + HighBP:GenHlth,
+               parts$train, method = "logistic", Hess = TRUE)
+
+
+```
+
+
+```{r}
+
+pred_bal_class <- predict(model1, newdata = parts$test, type = "class")
+pred_bal_prob  <- predict(model1, newdata = parts$test, type = "probs")
+
+
+library(caret)
+library(pROC)
+library(MLmetrics)
+library(irr)            # for kappa2 (QWK)
+
+# ============================================
+# 1. Prepare Predicted + True Labels
+# ============================================
+
+true_chr  <- as.character(parts$test$Diabetes_012)
+pred_chr  <- as.character(pred_bal_class)
+
+common_levels <- levels(df$Diabetes_012)
+
+true_f  <- factor(true_chr,  levels = common_levels)
+pred_f  <- factor(pred_chr,  levels = common_levels)
+
+# Numeric versions for MAE/QWK
+true_num <- as.numeric(true_f)
+pred_num <- as.numeric(pred_f)
+
+# ============================================
+# 2. Accuracy
+# ============================================
+
+acc_bal <- mean(pred_f == true_f)
+cat("Balanced Model Accuracy:", acc_bal, "\n")
+
+# ============================================
+# 3. Confusion Matrix
+# ============================================
+
+cat("\nBalanced Model Confusion Matrix:\n")
+print(confusionMatrix(pred_f, true_f))
+
+# ============================================
+# 4. Multiclass AUC
+# ============================================
+
+auc_bal <- multiclass.roc(true_f, pred_bal_prob)$auc
+cat("\nBalanced Model Multiclass AUC:", auc_bal, "\n")
+
+# ============================================
+# 5. Log-Loss
+# ============================================
+
+logloss_bal <- MultiLogLoss(pred_bal_prob, true_num)
+cat("\nBalanced Model LogLoss:", logloss_bal, "\n")
+
+# ============================================
+# 6. Mean Absolute Error (MAE)
+# ============================================
+
+mae_bal <- MAE(pred_num, true_num)
+cat("\nBalanced Model MAE:", mae_bal, "\n")
+
+# ============================================
+# 7. Quadratic Weighted Kappa (QWK)
+# ============================================
+
+# irr::kappa2 requires a 2-column matrix or data frame
+qwk_bal <- kappa2(data.frame(true_num, pred_num), weight = "squared")$value
+cat("\nBalanced Model QWK:", qwk_bal, "\n")
+
+# ============================================
+# 8. Summary Table
+# ============================================
+
+results_balanced <- tibble(
+  Metric = c("Accuracy", "Multiclass AUC", "LogLoss", "MAE", "QWK"),
+  Balanced_Model = c(acc_bal, auc_bal, logloss_bal, mae_bal, qwk_bal)
+)
+
+print(results_balanced)
 
 
 
