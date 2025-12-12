@@ -24,7 +24,7 @@ create_cm <- function(pred_df, t_pre, t_diab, test) {
   return(cm)
 }
 
-plot_cm <- function(cm) {
+plot_cm <- function(cm, title = "Confusion Matrix (Shaded by % of Actual Class)") {
   cm_df <- as.data.frame(cm$table)
   names(cm_df) <- c("Predicted", "Actual", "Freq")
   
@@ -38,10 +38,10 @@ plot_cm <- function(cm) {
               color = "black", size = 3) +
     scale_fill_gradient(low = "white", high = "steelblue") +
     labs(
-      title = "Confusion Matrix (Shaded by % of Actual Class)",
+      title = title,
       x = "Actual Class",
       y = "Predicted Class",
-      fill = "% of Actual"
+      fill = "% of Actual Class"
     ) +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))

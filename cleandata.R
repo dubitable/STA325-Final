@@ -15,5 +15,12 @@ cleandata = function(data) {
                             ordered = TRUE
       )
     )
+  data$Age3 <- cut(as.numeric(as.character(data$Age)),
+                 breaks = c(0, 4, 9, 13),
+                 labels = c("Young", "Middle", "Old"),
+                 ordered_result = FALSE)
+  
+  data$logBMI <- log(data$BMI)
+  data$logBMI_c <- (data$logBMI - mean(data$logBMI)) / sd(data$logBMI)
   return(data)
 }

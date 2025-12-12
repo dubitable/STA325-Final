@@ -54,6 +54,9 @@ plot_cm(cm)
 ```
 
 ```{r}
+pred_bal_class <- predict(model_polr, newdata = test, type = "class")
+cm <- confusionMatrix(pred_bal_class, test$Diabetes_012)
+cm$overall
 qwk_score(pred$ypred, test$Diabetes_012)
 mae_ord(pred$ypred, test$Diabetes_012)
 ```

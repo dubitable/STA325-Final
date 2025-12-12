@@ -8,6 +8,7 @@ set.seed(123)
 
 library(MASS)
 library(caret)
+library(car)
 library(pROC)
 library(brant)
 
@@ -24,8 +25,6 @@ head(diabetes)
 ```
 
 ```{r}
-
-
 diabetes |> count(Diabetes_012) |> ggplot(aes(x = "", y = n, fill=Diabetes_012)) + 
   geom_bar(stat="identity", width=1) +
   coord_polar("y", start=0) + 
@@ -42,21 +41,24 @@ train |> count(Diabetes_012)
 ```
 
 ```{r}
-model_polr <- polr(
-  Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI + HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth + Sex + Age + HighBP:GenHlth,
-  data = train,
-  Hess = TRUE,
-)
+#    1–4   = Young (roughly 18–34)
+#    5–9   = Middle-aged (35–64)
+#    10–13 = Older adults (65+)
+
+diabetes |> count(Age3)
 ```
 
 ```{r}
-#n <- nrow(train)
-#model_polr_stepBIC <- stepAIC(
-#  model_polr,
-#  direction = "both",
-#  scope = list(lower = ~1, upper = ~ .^2),
-#  k = log(n)
-#)
+model_polr <- polr(
+  Diabetes_012 ~ 
+  logBMI_c + Age3 + HighBP + HighChol + 
+  Smoker + Stroke + HeartDiseaseorAttack + 
+  HvyAlcoholConsump + AnyHealthcare + NoDocbcCost + GenHlth + DiffWalk + Sex + Income  +
+  HighBP:HighChol,
+  data = train,
+  method = "logistic",
+  Hess = TRUE
+)
 ```
 
 ```{r}
@@ -103,6 +105,9 @@ legend("bottomright",
 
 auc(roc_no); auc(roc_pre); auc(roc_dia)
 ```
+```{r}
+vif(model_polr)
+```
 
 ```{r}
 target <- 0.7
@@ -121,7 +126,7 @@ t_diab <- 0.3
 
 cm <- create_cm(pred_df, t_pre, t_diab, test)
 cm$table
-plot_cm(cm)
+plot_cm(cm, "Cumulative Logit Model Confusion Matrix")
 ```
 
 ```{r}
@@ -131,59 +136,85 @@ mae_ord(pred, test$Diabetes_012)
 
 
 ```{r}
-plot_probs <- function(model, inputs) {
-  a1 <- model$zeta["NoDiabetes|PreDiabetes"]
-  a2 <- model$zeta["PreDiabetes|Diabetes"]
+get_probs <- function(model, df_new, title = "") {
+  vary_seq = seq(min(diabetes$BMI), max(diabetes$BMI), by = 0.5)
+  df_new <- df_new[rep(1, length(vary_seq)), , drop = FALSE]
+  df_new[["BMI"]] <- vary_seq
   
-  coefs <- model$coefficients
+  df_new[["logBMI_c"]] <- (log(df_new[["BMI"]]) - mean(log(diabetes$BMI))) / sd(log(diabetes$BMI))
+
   
-  offset <- 0
+  probs <- cbind(df_new, predict(model, newdata = df_new, type = "probs"))
+
+  probs_long <- probs |>
+    pivot_longer(cols = c(NoDiabetes, PreDiabetes, Diabetes),
+                 names_to = "Outcome",
+                 values_to = "Probability")
   
-  if (!is.null(inputs)) {
-    names_in_model <- intersect(names(inputs), names(coefs))
-    offset <- sum(coefs[names_in_model] * unlist(inputs[names_in_model]))
-  }
-  
-  b <-  coefs["BMI"]
-  
-  x <- seq(min(diabetes$BMI), max(diabetes$BMI), by = 0.1)
-  
-  eta1 <- a1 - (b * x + offset)
-  eta2 <- a2 - (b * x + offset)
-  
-  P1 <- plogis(eta1)
-  P2 <- plogis(eta2)
-  
-  p1 <- P1
-  p2 <- P2 - P1
-  p3 <- 1 - P2
-  
-  df <- data.frame(
-    x = rep(x, 3),
-    prob = c(p1, p2, p3),
-    outcome = factor(rep(c("NoDiabetes", "PreDiabetes", "Diabetes"), each = length(x)))
-  )
-  
-  ggplot(df, aes(x = x, y = prob, color = outcome)) +
+  probs_long$Outcome <- factor(probs_long$Outcome, 
+                               levels = c("NoDiabetes",
+                                          "PreDiabetes",
+                                          "Diabetes"))
+
+  return(probs_long)
+}
+
+plot_probs <- function(probs, title = "") {
+  p <- ggplot(probs, aes(x = BMI, y = Probability, color = Outcome)) +
     geom_line() +
-    ylab("Probability") +
-    xlab("BMI") +
-    theme_minimal() 
+    labs(title = title)
+  return(p)
 }
 ```
 
 ```{r}
-inputs <- list(
-  HighBP = 1,
-  HighChol = 1,
-  CholCheck = 1,
-  HeartDiseaseorAttack = 1,
-  HvyAlcoholConsump = 1,
-  GenHlth = 5,
-  Sex = 1,
-  Age = 10
-)
+template <- model_polr$model[1, , drop = FALSE]
 
-plot_probs(model_polr, inputs)
+template$Age3 <- factor("Young", levels = levels(model_polr$model$Age3)) 
+template$HighBP <- factor(0, levels = levels(model_polr$model$HighBP)) # 0 no high BP
+template$HighChol <- factor(0, levels = levels(model_polr$model$HighChol)) # 0 no high Chol
+template$PhysActivity <- factor(0, levels = levels(model_polr$model$PhysActivity)) # 0 no phys ac
+template$Smoker <- factor(0, levels = levels(model_polr$model$Smoker)) # 0 no smoker
+template$Stroke <- factor(0, levels = levels(model_polr$model$Stroke)) # 0 no stroke
+template$HeartDiseaseorAttack <- factor(1, levels = levels(model_polr$model$HeartDiseaseorAttack))#  0 no disease
+template$Fruits <- factor(1, levels = levels(model_polr$model$Fruits)) # 0 no fruits
+template$Veggies <- factor(1, levels = levels(model_polr$model$Veggies)) #0 no veg
+template$HvyAlcoholConsump <- factor(0, levels = levels(model_polr$model$HvyAlcoholConsump)) # 0 no alcohol
+template$AnyHealthcare <- factor(0, levels = levels(model_polr$model$Veggies)) # 0 no healthcare
+template$NoDocbcCost <- factor(0, levels = levels(model_polr$model$NoDocbcCost)) # 0 no doctor cost
+template$GenHlth <- factor(1, levels = levels(model_polr$model$GenHlth)) # 1-5 1 excellent
+template$DiffWalk <- factor(1, levels = levels(model_polr$model$DiffWalk)) # 0 no hard time climbing
+template$Sex <- factor(0, levels = levels(model_polr$model$Sex)) # 0 female
+template$Income <- factor(1, levels = levels(model_polr$model$Income)) # 1-8, 1 poor
+```
+
+```{r}
+template$Sex <- factor(0, levels = levels(model_polr$model$Sex))
+probs <- get_probs(model_polr, template)
+plot_probs(probs, "BMI vs Diabetes Probability (Healthy Female)")
+
+template$Sex <- factor(1, levels = levels(model_polr$model$Sex))
+probs <- get_probs(model_polr, template)
+plot_probs(probs, "BMI vs Diabetes Probability (Healthy Male)")
+```
+
+```{r}
+brant(model_polr)
+```
+
+```{r}
+summary(model_polr)
+```
+
+```{r}
+brant(model_polr)
+```
+
+```{r}
+pred_bal_class <- predict(model_polr, newdata = test, type = "class")
+cm <- confusionMatrix(pred_bal_class, test$Diabetes_012)
+cm$overall
+qwk_score(pred, test$Diabetes_012)
+mae_ord(pred, test$Diabetes_012)
 ```
 
