@@ -504,8 +504,6 @@ model2 <- polr(
   logBMI_c + Age3 + HighBP + HighChol + 
   Smoker + Stroke + HeartDiseaseorAttack + Fruits + Veggies + 
   HvyAlcoholConsump + AnyHealthcare + NoDocbcCost + GenHlth + DiffWalk + Sex + Income  +
-
-  # Interaction terms:
   HighBP:HighChol,
   data = parts$train,
   method = "logistic",
@@ -523,8 +521,8 @@ model1 <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI +
 
 ```{r}
 
-pred_bal_class <- predict(model1, newdata = parts$test, type = "class")
-pred_bal_prob  <- predict(model1, newdata = parts$test, type = "probs")
+pred_bal_class <- predict(model2, newdata = parts$test, type = "class")
+pred_bal_prob  <- predict(model2, newdata = parts$test, type = "probs")
 
 
 library(caret)
@@ -601,6 +599,73 @@ results_balanced <- tibble(
 )
 
 print(results_balanced)
+
+
+
+```
+
+```{r}
+
+library(caret)
+library(MLmetrics)
+
+# ==========================================================
+# CONFUSION MATRIX (already correct)
+# ==========================================================
+
+cat("\nBalanced Model Confusion Matrix:\n")
+cm <- confusionMatrix(pred_f, true_f)
+print(cm)
+
+# ==========================================================
+# F1 SCORE FOR EACH CLASS
+# ==========================================================
+
+# caret::confusionMatrix stores table as a matrix
+cm_table <- cm$table
+
+# Extract precision, recall, F1 manually per class
+f1_scores <- c()
+
+for (i in seq_along(common_levels)) {
+  class <- common_levels[i]
+
+  # True positives
+  TP <- cm_table[class, class]
+
+  # Predicted positives
+  PP <- sum(cm_table[class, ])
+
+  # Actual positives
+  AP <- sum(cm_table[, class])
+
+  precision <- ifelse(PP == 0, 0, TP / PP)
+  recall    <- ifelse(AP == 0, 0, TP / AP)
+
+  f1 <- ifelse(precision + recall == 0, 0,
+               2 * precision * recall / (precision + recall))
+
+  f1_scores[class] <- f1
+}
+
+cat("\nF1 Score per Class:\n")
+print(f1_scores)
+
+# ==========================================================
+# MACRO-F1  (simple average)
+# ==========================================================
+
+macro_f1 <- mean(f1_scores)
+cat("\nMacro F1:", macro_f1, "\n")
+
+# ==========================================================
+# WEIGHTED-F1  (weighted by class prevalence)
+# ==========================================================
+
+class_weights <- table(true_f) / length(true_f)
+weighted_f1 <- sum(f1_scores * class_weights)
+
+cat("\nWeighted F1:", weighted_f1, "\n")
 
 
 
