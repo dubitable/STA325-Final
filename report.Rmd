@@ -64,7 +64,7 @@ We examined the distributions of categorical variables and visualized the propor
 
 Continuous variables such as `BMI`, `MentHlth`, and `PhysHlth` were visualized using histograms to assess their distributions and potential need for transformations. Interaction effects and transformations of variables were also explored to capture non-linear relationships that may improve model performance.
 
-```{r Figure 1, fig.cap = "The distribution of categorical data collected from the 2015 BRFSS survey along with respective diabetes class", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8}
+```{r fig.cap = "The distribution of categorical data collected from the 2015 BRFSS survey along with respective diabetes class", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8}
 
 
 cat_vars <- c("Age", "HighBP", "HighChol", "CholCheck", 
@@ -88,7 +88,7 @@ diabetes |>
 
 ```
 
-```{r Figure 2, fig.cap = "Count of observations within each diabetes class", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8}
+```{r fig.cap = "Count of observations within each diabetes class", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8}
 
 diabetes |> count(Diabetes_012)
 ```
@@ -101,7 +101,7 @@ After building intuition for the underlying feature distributions, our group exp
 
 ## Interaction Effects
 
-[Krish + Pierre]
+[Krish's work]
 
 ## Modeling Approach
 
@@ -115,7 +115,11 @@ $$ \## Other Methods: Black Box Models (remove if we decide not to use)
 
 While our main focus was to develop a model on a subset of predictors that allowed for interpretation of the driving factors of diabetes risk, we also considered several "black box" models that focused on predictive power rather than inference. - Random Forests: - Ordinal Forests: - Boosted Tree: - Support Vector Machine (SVM):
 
+[Pierre's work]
+
 # Results
+
+[Pierre's work]
 
 what types of metrics used?
 
@@ -130,6 +134,8 @@ results of SVMs, decision trees. pros and cons.
 This time around, need more plots showing degree of interactions and nonlinearities
 
 # Conclusion
+
+[Michael's work]
 
 In this statistical study, we have shown that it is possible to consistently and accurately predict cases of diabetes, prediabetes, and non-diabetes.
 

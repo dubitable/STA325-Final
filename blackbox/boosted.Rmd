@@ -17,7 +17,8 @@ source("../eval.R")
 ```
 
 ```{r}
-diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
+diabetes_raw <- read.csv("../data/diabetes_012_health_indicators_BRFSS2015.csv")
+
 diabetes <- cleandata(diabetes_raw)
 head(diabetes)
 ```
@@ -58,4 +59,3 @@ pred.class <- factor(max.col(pred) - 1, labels = c("NoDiabetes", "PreDiabetes", 
 cm <- confusionMatrix(pred.class, test$Diabetes_012) 
 plot_cm(cm)
 ```
-
