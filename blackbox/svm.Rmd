@@ -37,9 +37,7 @@ train |> count(Diabetes_012)
 svm.model <- svm(
   Diabetes_012 ~ .,
   data = train,
-  kernel = "radial",
-  cost = 100,
-  gamma = 0.001
+  kernel = "linear"
 )
 ```
 
@@ -67,6 +65,7 @@ plot_cm(cm)
 ```
 
 ```{r}
+cm$overall
 qwk_score(pred, test$Diabetes_012)
 mae_ord(pred, test$Diabetes_012)
 ```
