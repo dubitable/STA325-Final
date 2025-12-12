@@ -1,0 +1,24 @@
+
+```{r}
+library(MASS)
+library(e1071)
+library(car)
+library(caret)
+library(pROC)
+library(brant)
+   # for QWK (squared weighted kappa)
+library(Metrics)  # for logLoss
+
+source("cleandata.R")
+source("eval.R")
+source("confusionmatrix.R")
+source("partition.R")
+
+diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
+diabetes <- cleandata(diabetes_raw)
+head(diabetes)
+
+
+
+```
+
