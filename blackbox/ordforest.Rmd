@@ -38,7 +38,6 @@ train |> count(Diabetes_012)
 #save(of.model, file = "ordforest.RData")
 ```
 
-
 ```{r}
 load("ordforest.RData")
 ```
@@ -46,7 +45,6 @@ load("ordforest.RData")
 ```{r}
 pred <- predict(of.model, newdata = test)
 ```
-
 
 ```{r}
 cm <- confusionMatrix(pred$ypred, test$Diabetes_012) 
@@ -60,4 +58,3 @@ cm$overall
 qwk_score(pred$ypred, test$Diabetes_012)
 mae_ord(pred$ypred, test$Diabetes_012)
 ```
-

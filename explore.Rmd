@@ -105,6 +105,7 @@ legend("bottomright",
 
 auc(roc_no); auc(roc_pre); auc(roc_dia)
 ```
+
 ```{r}
 vif(model_polr)
 ```
@@ -133,7 +134,6 @@ plot_cm(cm, "Cumulative Logit Model Confusion Matrix")
 qwk_score(predclass, test$Diabetes_012)
 mae_ord(pred, test$Diabetes_012)
 ```
-
 
 ```{r}
 get_probs <- function(model, df_new, title = "") {
@@ -217,4 +217,3 @@ cm$overall
 qwk_score(pred, test$Diabetes_012)
 mae_ord(pred, test$Diabetes_012)
 ```
-
