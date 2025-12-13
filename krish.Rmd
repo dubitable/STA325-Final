@@ -1,4 +1,3 @@
-
 ```{r}
 library(MASS)
 library(e1071)
@@ -108,8 +107,6 @@ ggplot(df, aes(x = factor(Income))) +
 
 ```
 
-
-
 ```{r}
 
 
@@ -118,7 +115,6 @@ library(MASS)
 base_model <- polr(Diabetes_012 ~ ., data = df, method = "logistic", Hess = TRUE)
 summary(base_model)
 ```
-
 
 ```{r}
 
@@ -135,6 +131,7 @@ fit_lasso <- ordinalNet(
 coef(fit_lasso)
 
 ```
+
 ```{r}
 coef_vec <- coef(fit_lasso)
 
@@ -168,8 +165,6 @@ tibble(
   ) +
   theme_minimal(base_size = 14)
 ```
-
-
 
 ```{r}
 
@@ -257,9 +252,6 @@ AIC(m_ord, m_fact)
 
 ```
 
-
-
-
 ```{r}
 
 
@@ -277,9 +269,6 @@ all_results %>% arrange(variable, AIC)
 
 
 ```
-
-
-
 
 ```{r}
 
@@ -339,7 +328,6 @@ model_formula <- Diabetes_012 ~
 
 ```
 
-
 ```{r}
 
 final_model <- polr(model_formula, 
@@ -350,6 +338,7 @@ final_model <- polr(model_formula,
 summary(final_model)
 
 ```
+
 ```{r}
 
 pierre <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI + HeartDiseaseorAttack + HvyAlcoholConsump + GenHlth + Sex + Age3 + HighBP:GenHlth, data = df, method = "logistic",Hess = TRUE)
@@ -363,8 +352,6 @@ summary(pierre)
 str(df)
 
 ```
-
-
 
 ```{r}
 
@@ -483,8 +470,6 @@ print(comparison)
 
 ```
 
-
-
 ```{r}
 
 # library(tidymodels)
@@ -540,6 +525,7 @@ ggplot(parts$train, aes(x = logBMI_c)) +
 
 
 ```
+
 ```{r}
 
 parts$train
@@ -592,8 +578,6 @@ ggplot(newdat, aes(
 
 ```
 
-
-
 ```{r}
 
 model2 <- polr(
@@ -614,7 +598,6 @@ model1 <- polr(Diabetes_012 ~ HighBP + HighChol + CholCheck + BMI +
 
 
 ```
-
 
 ```{r}
 
@@ -824,4 +807,3 @@ ggplot(roc_df, aes(x = FPR, y = TPR, color = Class)) +
 
 
 ```
-
