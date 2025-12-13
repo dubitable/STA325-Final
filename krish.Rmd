@@ -169,6 +169,57 @@ tibble(
 ```{r}
 
 library(tidyverse)
+library(forcats)
+library(stringr)
+
+coef_vec <- coef(fit_lasso)
+
+p <- tibble(
+  term = names(coef_vec),
+  estimate = as.numeric(coef_vec)
+) %>%
+  # remove cutpoints
+  filter(!str_detect(term, "Intercept")) %>%
+  
+  # clean names
+  mutate(
+    term = term %>%
+      str_replace("\\d+$", "") %>%
+      str_replace_all("([a-z])([A-Z])", "\\1 \\2")
+  ) %>%
+  
+  # keep meaningful effects only (lasso-style)
+  filter(abs(estimate) > 0.1) %>%
+  arrange(estimate) %>%
+  
+  # plot
+  ggplot(aes(x = estimate, y = fct_reorder(term, estimate))) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(size = 3, color = "steelblue") +
+  labs(
+    title = "Key Predictors of Diabetes Severity",
+    subtitle = "Ordinal Logistic Regression with LASSO",
+    x = "Log-Odds Effect",
+    y = ""
+  ) +
+  theme_minimal(base_size = 14)
+
+# save high-quality figure
+ggsave(
+  filename = "figures/lasso_coefficients.png",
+  plot = p,
+  width = 6,
+  height = 4,
+  dpi = 300
+)
+
+
+```
+
+
+```{r}
+
+library(tidyverse)
 library(MASS)      # 
 for polr()
 # library(rms)       # for restricted cubic splines (rcs)
