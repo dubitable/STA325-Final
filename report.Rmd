@@ -2,6 +2,8 @@
 title: "Predicting 2015 American Diabetes Cases via Health Indicators"
 author: "Krish Bansal, Pierre Quereuil, & Michael Puglise"
 date: "December 15, 2025"
+header-includes:
+  - \usepackage{float}
 output:
   bookdown::pdf_document2:
     fig_caption: true
@@ -113,52 +115,53 @@ This modeling framework balances predictive performance with interpretability, m
 
 # Results
 
+## Model Assumptions
+
+By using a cumulative logit model, we assume proportional odds. To verify this, we used the Brant test, which indicated that the proportional odds assumption was largely met (Omnibus $\gamma^2(29) = 215.44$, $p < 0.001$). Only a few predictors — notably HighChol, HvyAlcoholConsump, NoDocbcCost, and high-income categories — exhibited minor deviations $p < 0.05$). Given the small number and effect size of deviations, the assumption was considered adequately satisfied.
+
 ## Prediction
 
 ```{r fig.cap = "Cumulative Logit Model Confusion Matrix", message=FALSE, warning=FALSE, echo=FALSE, fig.height=2.7, fig.width=5, fig.pos='!H'}
 results_plot()
 ```
 
-## Assumptions and Uncertainty
+The model shows an overall sensitivity of about 0.50 and a specificity of about 0.81 across classes, indicating it is more effective at correctly identifying negatives than positives. It is highly specific for nodiabetes (93%), meaning few false positives, but sensitivity is moderate (48%), so many true nodiabetes cases are upgraded to prediabetes or diabetes. For prediabetes, both sensitivity (29%) and specificity (75%) are low, showing the model struggles to detect this class accurately. For diabetes, sensitivity is relatively strong at 74% (the model correctly identifies most diabetic cases) but specificity (74%) is moderate, suggesting a fair number of false positives.
 
+These results are far from perfect but are extremely encouraging. Importantly, false negatives (predicting No nodiabetes when an individual actually has diabetes) are rare, indicating strong performance in distinguishing the most severe category. The model tends to err conservatively by predicting higher‑risk categories (prediabetes or diabetes) rather than underestimating risk, which we believe is beneficial from a public health perspective, as it identifies individuals potentially “trending” toward diabetes. Furthermore, a condition like prediabetes is naturally difficult to differentiate from both no diabetes and diabetes, hence the model's struggles there.
 
-
+As covered later, we attempted many other models aiming for more predictive power, and did not gain much more accuracy, which reinforces our main goal: intepretability over predictive power. We cannot be fully accurate by just using survey results to predict a medical condition that requires testing, but we can identify important risk factors.
 
 ## Interpretation
 
-One of the benefits of cumulative logit models is interpretability: we are able to reconstruct the predicted probability of diabetes risk as different predictors change. With 11 predictors, it's difficult to visualize each effect individually, so we set baselines of "healthy" or "unhealthy" individuals and vary one or two variables at a time. 
+The main benefit of our cumulative logit models is interpretability: we are able to reconstruct the predicted probability of diabetes risk as different predictors change, which is immensely valuable to identify the main sources of risk for diabetes. Since we have 11 predictors, it's difficult to visualize each effect individually, so we set baselines of "healthy" or "unhealthy" individuals and vary one or two variables at a time. 
 
-```{r fig.cap = "Probability of Diabetes Risk Across Age and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8, fig.pos='!H'}
+```{r fig.cap = "Probability of Diabetes Risk Across Age and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=3, fig.width=8, fig.pos='!H'}
 age_plot()
 ```
 
-In figure _, we take the baseline of an unhealthy individual (someone with high cholesterol, who doesn't exercise much...) and plot our model's predicted probability of diabetes risk against the individual's BMI and age group. Strikingly, the distribution shifts left as age increases, showing that older individuals are more at risk of diabetes than a younger one of the same BMI.
+Above, we take the baseline of an unhealthy individual (someone with high cholesterol, who doesn't exercise much...) and plot our model's predicted probability of diabetes risk against the individual's BMI and age group. Strikingly, the distribution shifts left as age increases, showing that older individuals are more at risk of diabetes than a younger one of the same BMI.
 
-```{r fig.cap = "Probability of Diabetes Risk Across Sex and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=5, fig.pos='!H'}
+```{r fig.cap = "Probability of Diabetes Risk Across Sex and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=3, fig.width=6, fig.pos='!H'}
 sex_plot()
 ```
+
+As seen above, some predictors aren't as interactive - the probability distributions look generally the same for males and females of similar health status. Our model then indicates that a female individual generally has about the same risk as a male individual with an equivalent BMI. However, this doesn't mean that sex is not good predictor, but that it may contribute to more substantial variations in other predictive factors.
+
+## Short-Form Screening Tool
+
+In our project, we aimed to identify the factors associated with diabetes and narrow down the dataset we used into a short-form screening tool to quickly and effectively identify those at risk. The original survey from the CDC contained 330 features, which were reduced to 21 cleaned features in the dataset. Our survey developed from our final model now only includes 11 questions.
+
+- **Traits** (Sex and Age). Immutable factors that can influence diabetes but that cannot be changed. As seen with our analysis on age, these are heavily influential but act as informing variables rather than something that can be changed.
+
+- **Health History** (BMI, Stroke History, Heart Disease History, Difficulty Walking Up Stairs). This category captures important aspects of a person’s existing health status and physical condition - factors that directly contribute to their risk of developing diabetes or complications associated with it. 
+
+- **Habits** (Smoking, Alcohol Consumption). These variables track history with habits known to deteriorate health, and can help inform lifestyle changes for the concerned individual. 
+
+- **Economic Status** (Health Care Coverage, Refusal of Treatment Due to Cost, Income Level). Our study has revealed an unfortunate truth about diabetes risk as well: likely due to early signs morphing into diabetes in the absence of proper treatment. This observation should spur change amongst policymakers such that cost is not prohibitive to proper diabetes care.
+
+Through this project, we successfully distilled a complex dataset into an accessible and efficient screening tool composed of just 11 questions. By focusing on immutable traits, health history, habits, and economic factors, the model provides a balanced assessment of diabetes risk while remaining practical for real-world application. This simplified survey can aid early identification and prevention efforts, guiding both individuals and healthcare providers toward timely interventions and encouraging broader public health and policy actions to reduce diabetes incidence.
 
 \clearpage
-
-
-## Assumptions and Uncertainty
-
-
-## Interpretation
-
-One of the benefits of cumulative logit models is interpretability: we are able to reconstruct the predicted probability of diabetes risk as different predictors change. Since we have 11 predictors, it's difficult to visualize each effect individually, so we set baselines of "healthy" or "unhealthy" individuals and vary one or two variables at a time. 
-
-```{r fig.cap = "Probability of Diabetes Risk Across Age and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8, fig.pos='!H'}
-age_plot()
-```
-
-In figure _, we take the baseline of an unhealthy individual (someone with high cholesterol, who doesn't exercise much...) and plot our model's predicted probability of diabetes risk against the individual's BMI and age group. Strikingly, the distribution shifts left as age increases, showing that older individuals are more at risk of diabetes than a younger one of the same BMI.
-
-```{r fig.cap = "Probability of Diabetes Risk Across Sex and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=5, fig.pos='!H'}
-sex_plot()
-```
-
-\newpage
 
 # Aside: Black Box Models
 
@@ -170,14 +173,28 @@ While our main focus was to develop a model on a subset of predictors that allow
 
 - **Boosted Trees.** A sequential ensemble technique where each new tree is trained to correct the errors of the previous ones, producing a strong overall model through weighted combinations of weak learners. Hyperparameters like number of trees and max depth were also tuned via CV.
 
-| model       | Acc  | QWK  | MAE  |
+We used three metrics to evaluate each of these approaches against each other:
+
+- Accuracy: The proportion of correct predictions out of total cases. It reflects overall classification performance but doesn’t account for the ordinal nature of the outcome.
+
+- Quadratic Weighted Kappa: Measures agreement between predicted and actual classes, weighting disagreements by their distance along the ordinal scale. Higher values indicate better ordinal consistency.
+
+- Mean Absolute Error: The average absolute difference between predicted and actual class labels. Lower values indicate predictions closer to the correct category, emphasizing ordinal proximity rather than just exact matches.
+
+
+| model       | ACC  | QWK  | MAE  |
 |-------------|------|------|------|
-| Cumu. Logit | 0.61 | 0.35 | 0.96 |
+| Cumulative Logit | 0.61 | 0.35* | 0.58 |
 | Linear SVM  | 0.62 | 0.32 | 0.56 |
-| Radial SVM  | 0.63 | 0.32 | 0.57 |
-| RandForest  | 0.60 | 0.32 | 0.55 |
-| OrdForest   | 0.61 | 0.31 | 0.56 |
-| Boosted     | 0.33 | 0.25 | 0.96 |
+| Radial SVM  | 0.63* | 0.32 | 0.56 |
+| Random Forest  | 0.60 | 0.32 | 0.55* |
+| Ordinal Forest   | 0.61 | 0.31 | 0.56 |
+| Boosted Trees    | 0.33 | 0.25 | 0.96 |
+
+Overall, the radial SVM achieved the highest accuracy (0.63), although not much higher than any of the others. The cumulative logit model, while slightly behind in accuracy, maintained the highest QWK (0.35), implying stronger agreement with the true ordinal structure of diabetes risk categories. The random forest models performed comparably, with good MAE scores but somewhat lower QWK values. The boosted model was by far the worst performing, with low accuracy and QWK.
+
+These results solidify our original approach of the cumulative logit model. As stated before, the only way to properly diagnose diabetes is through proper medical paneling, not just survey results. There is thus a clear upper bound to performance that even black box models cannot overcome. Instead, we focus on the interpretability of cumulative logit models to better understand diabetes risk factors.
+
 \clearpage
 
 # Conclusion

@@ -126,7 +126,7 @@ t_pre <- 0.5
 t_diab <- 0.3
 
 cm <- create_cm(pred_df, t_pre, t_diab, test)
-cm$table
+cm$overall
 plot_cm(cm, "Cumulative Logit Model Confusion Matrix")
 ```
 
@@ -207,7 +207,7 @@ summary(model_polr)
 ```
 
 ```{r}
-brant(model_polr)
+
 ```
 
 ```{r}

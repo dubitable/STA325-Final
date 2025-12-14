@@ -1,5 +1,6 @@
 library(gridExtra)
 library(MASS)
+library(brant)
 
 source("./cleandata.R")
 source("./partition.R")
@@ -22,7 +23,6 @@ model_polr <- polr(
   Hess = TRUE
 )
 
-<<<<<<< HEAD
 distribution_plot <- function() {
   cat_vars <- c("Age", "HighBP", "HighChol", "Smoker", 
                 "HeartDiseaseorAttack", "HvyAlcoholConsump", 
@@ -56,8 +56,7 @@ results_plot <- function() {
   plot_cm(cm, "")
 }
 
-=======
->>>>>>> 1946d5003978b5e7c91ec8995e5c783bfbacad9a
+
 healthy_template <- function() {
   template <- model_polr$model[1, , drop = FALSE]
   
@@ -141,7 +140,7 @@ age_plot <- function() {
   ggplot(probs, aes(x = BMI, y = Probability, color = Outcome)) +
     geom_line() +
     labs(title = "", color = "") +
-    theme(legend.position = "top") + 
+    theme(legend.position = "right") + 
     facet_wrap(~AgeGroup)
 }
 
@@ -175,7 +174,7 @@ sex_plot <- function() {
   ggplot(probs, aes(x = BMI, y = Probability, color = Outcome)) +
     geom_line() +
     labs(title = "", color = "") +
-    theme(legend.position = "top") + 
+    theme(legend.position = "right") + 
     facet_grid(rows = vars(Baseline), cols = vars(Sex))
 }
 
@@ -200,6 +199,27 @@ get_probsbpchol <- function(model, df_new) {
                                           "Diabetes"))
   
   return(probs_long)
+}
+
+brant_plot <- function() {
+  tmp <- capture.output(
+    brant.result <- as.data.frame(brant(model_polr))
+  )
+  
+  brant_plotdf <- brant.result %>%
+    mutate(variable = rownames(.)) %>%
+    filter(variable != "Omnibus")
+  
+  ggplot(brant_plotdf, aes(x = reorder(variable, probability),
+                           y = probability)) +
+    geom_point(aes(color = probability < 0.05), size = 3) +
+    geom_hline(yintercept = 0.05, linetype = "dashed", color = "red") +
+    coord_flip() +
+    scale_y_continuous(sec.axis = dup_axis(name = NULL),
+                       limits = c(0, 1), expand = expansion(mult = c(0, 0.05))) +
+    labs(title = "",
+         x = NULL, y = "p-value", color = "p < 0.05") +
+    theme_minimal()
 }
 
 bpchol_plot <- function() {
