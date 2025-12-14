@@ -22,6 +22,7 @@ model_polr <- polr(
   Hess = TRUE
 )
 
+<<<<<<< HEAD
 distribution_plot <- function() {
   cat_vars <- c("Age", "HighBP", "HighChol", "Smoker", 
                 "HeartDiseaseorAttack", "HvyAlcoholConsump", 
@@ -55,6 +56,8 @@ results_plot <- function() {
   plot_cm(cm, "")
 }
 
+=======
+>>>>>>> 1946d5003978b5e7c91ec8995e5c783bfbacad9a
 healthy_template <- function() {
   template <- model_polr$model[1, , drop = FALSE]
   

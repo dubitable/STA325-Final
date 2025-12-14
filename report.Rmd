@@ -7,7 +7,6 @@ output:
     fig_caption: true
     toc: false
     number_sections: false
-    extra_dependencies: ["float"]
 ---
 
 # Introduction
@@ -140,6 +139,26 @@ sex_plot()
 ```
 
 \clearpage
+
+
+## Assumptions and Uncertainty
+
+
+## Interpretation
+
+One of the benefits of cumulative logit models is interpretability: we are able to reconstruct the predicted probability of diabetes risk as different predictors change. Since we have 11 predictors, it's difficult to visualize each effect individually, so we set baselines of "healthy" or "unhealthy" individuals and vary one or two variables at a time. 
+
+```{r fig.cap = "Probability of Diabetes Risk Across Age and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8, fig.pos='!H'}
+age_plot()
+```
+
+In figure _, we take the baseline of an unhealthy individual (someone with high cholesterol, who doesn't exercise much...) and plot our model's predicted probability of diabetes risk against the individual's BMI and age group. Strikingly, the distribution shifts left as age increases, showing that older individuals are more at risk of diabetes than a younger one of the same BMI.
+
+```{r fig.cap = "Probability of Diabetes Risk Across Sex and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=5, fig.pos='!H'}
+sex_plot()
+```
+
+\newpage
 
 # Aside: Black Box Models
 
