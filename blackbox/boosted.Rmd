@@ -59,3 +59,10 @@ pred.class <- factor(max.col(pred) - 1, labels = c("NoDiabetes", "PreDiabetes", 
 cm <- confusionMatrix(pred.class, test$Diabetes_012) 
 plot_cm(cm)
 ```
+```{r}
+pred <- predict(xgb.model, newdata = test_matrix, type = "class")
+cm$overall
+qwk_score(pred, test$Diabetes_012)
+mae_ord(pred, test$Diabetes_012)
+```
+

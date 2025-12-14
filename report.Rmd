@@ -9,6 +9,8 @@ output:
     fig_caption: TRUE
   bookdown::word_document2:
     fig_caption: TRUE
+  pdf_document:
+    extra_dependencies: ["float"]
 ---
 
 # Introduction
@@ -33,10 +35,12 @@ To achieve these goals, we combine exploratory data analysis (EDA), feature sele
 library(tidyverse)
 library(patchwork)
 library(bookdown)
+library(knitr)
 source("./eval.R")
 source("./cleandata.R")
 source("./partition.R")
 source("./confusionmatrix.R")
+source("./plots.R")
 
 diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
 diabetes <- cleandata(diabetes_raw)
@@ -67,12 +71,12 @@ Continuous variables such as `BMI`, `MentHlth`, and `PhysHlth` were visualized u
 ```{r fig.cap = "The distribution of categorical data collected from the 2015 BRFSS survey along with respective diabetes class", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8}
 
 
-cat_vars <- c("Age", "HighBP", "HighChol", "CholCheck", 
+cat_vars <- c("Age", "HighBP", "HighChol", "Smoker", 
               "HeartDiseaseorAttack", "HvyAlcoholConsump", 
-              "GenHlth", "Sex")
+              "GenHlth", "Income", "Sex")
 
 diabetes |>
-  select(all_of(cat_vars), Diabetes_012) |>
+  dplyr::select(all_of(cat_vars), Diabetes_012) |>
   pivot_longer(cols = all_of(cat_vars), names_to = "variable", values_to = "value") |>
   ggplot(aes(x = value, fill = Diabetes_012)) +
     geom_bar(position = "fill") +                  # stack normalized to proportions
@@ -128,33 +132,53 @@ Our final model incorporates transformations of key continuous predictors to bet
 
 This modeling framework balances predictive performance with interpretability, making it well suited for understanding how health behaviors and indicators jointly influence diabetes risk across different levels of severity.
 
-## Other Methods: Black Box Models (remove if we decide not to use)
-
-While our main focus was to develop a model on a subset of predictors that allowed for interpretation of the driving factors of diabetes risk, we also considered several "black box" models that focused on predictive power rather than inference. - Random Forests: - Ordinal Forests: - Boosted Tree: - Support Vector Machine (SVM):
-
-[Pierre's work]
+\newpage
 
 # Results
 
-[Pierre's work]
+## Prediction
 
-what types of metrics used?
+## Assumptions and Uncertainty
 
-results of multinomal logistic regression model
 
-confusion matrix
+## Interpretation
 
-results of SVMs, decision trees. pros and cons.
+One of the benefits of cumulative logit models is interpretability: we are able to reconstruct the predicted probability of diabetes risk as different predictors change. Since we have 11 predictors, it's difficult to visualize each effect individually, so we set baselines of "healthy" or "unhealthy" individuals and vary one or two variables at a time. 
 
-Talk about how model selection was performed based on threshold-independent metrics such as BIC, quadratic weighted kappa, log loss, mean absolute error, and macro AUC.
+```{r fig.cap = "Probability of Diabetes Risk Across Age and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8, fig.pos='!H'}
+age_plot()
+```
 
-After the best model is chosen, analyze threshold-dependent metrics such as One-vs-All (OvA) ROC, F1, precision, and recall that we used to determine an optimal probability cutoff.
+In figure _, we take the baseline of an unhealthy individual (someone with high cholesterol, who doesn't exercise much...) and plot our model's predicted probability of diabetes risk against the individual's BMI and age group. Strikingly, the distribution shifts left as age increases, showing that older individuals are more at risk of diabetes than a younger one of the same BMI.
 
-### Assumptions and Uncertainty
+```{r fig.cap = "Probability of Diabetes Risk Across Sex and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=5, fig.pos='!H'}
+sex_plot()
+```
 
-### Interpretation
+\newpage
 
-This time around, need more plots showing degree of interactions and nonlinearities
+# Aside: Black Box Models
+
+While our main focus was to develop a model on a subset of predictors that allowed for interpretation of the driving factors of diabetes risk, we also considered several "black box" models that focused on predictive power rather than inference. These models lose the interpretability of our cumulative logit model, but offer systems that allow for more abstract boundaries to be drawn between our classes. 
+
+- Support Vector Machine (SVM). A classification algorithm that finds the optimal boundary that best separates data points of different classes in a high-dimensional space. While SVMs are effective with linear boundaries, we also used a radial basis function (RBF) kernel to capture more complex, nonlinear relationships, with the cost and gamma parameters tuned via cross-validation.
+- Random Forests. An ensemble method that builds many decision trees on random subsets of data and features, and combines their results to improve accuracy and reduce overfitting. We tried both regular random forests and an adapted version for ordinal data presented in Hornung (2020).
+- Boosted Trees. A sequential ensemble technique where each new tree is trained to correct the errors of the previous ones, producing a strong overall model through weighted combinations of weak learners. Hyperparameters like number of trees and max depth were also tuned via CV.
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(knitr)
+library(kableExtra)
+
+results <- data.frame(
+  Model = c("Cumu. Logit", "Linear SVM", "Radial SVM", "RandForest", "OrdForest", "Boosted."),
+  Acc = c(0.61, 0.62, 0.63, 0.60, 0.61, 0.33),
+  QWK = c(0.35, 0.32, 0.32, 0.32, 0.31, 0.25),
+  MAE = c(0.96, 0.56, 0.57, 0.55, 0.56, 0.96)
+)
+
+kable(results, caption = "Model performance comparison: Accuracy (Acc), QWK, and MAE.") |>
+  kable_styling(full_width = FALSE, position = "center")
+```
 
 # Conclusion
 

@@ -59,7 +59,7 @@ summary(svm.model)
 ```
 
 ```{r}
-pred <- predict(svm.model, newdata = test)
+pred <- predict(svm.model, newdata = test, type = "class")
 cm <- confusionMatrix(pred, test$Diabetes_012) 
 plot_cm(cm)
 ```
