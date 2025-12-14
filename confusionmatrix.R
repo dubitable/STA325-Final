@@ -41,8 +41,7 @@ plot_cm <- function(cm, title = "Confusion Matrix (Shaded by % of Actual Class)"
       title = title,
       x = "Actual Class",
       y = "Predicted Class",
-      fill = "% of Actual Class"
+      fill = "% of Actual"
     ) +
-    theme_minimal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme_minimal()
 }
