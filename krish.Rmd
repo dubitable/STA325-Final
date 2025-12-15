@@ -439,6 +439,38 @@ bmi_graphs
 
 ```{r}
 
+
+age_p <- ggplot(df, aes(x = factor(Age))) +
+  geom_bar(fill = "steelblue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Age Categories", x = "Age Code", y = "Frequency")
+
+
+new_age <- ggplot(df, aes(x = factor(Age3))) +
+  geom_bar(fill = "steelblue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Age Categories", x = "Age Code", y = "Frequency")
+
+
+
+
+
+
+
+```
+
+
+```{r}
+
+age_trans <- ape_p / new_age
+
+
+```
+
+
+
+```{r}
+
 final_model <- polr(model_formula, 
                     data = df, 
                     method = "logistic",

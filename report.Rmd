@@ -107,27 +107,25 @@ We also noted which coefficients had a sign change in order to see what direct c
 
 \textit{BMI, Age, HighBP,  HighChol, Smoker, Stroke, HeartDiseaseorAttack, HvyAlcoholConsump, AnyHealthcare, NoDocbcCost, GenHlth, DiffWalk, Sex, Income}
 
-In addition to the statistical evidence for using these variables, these variables make medical sense as to why they would factor into a person having diabetes. 
+In addition to the statistical evidence for using these variables, these variables make medical sense as to why they would factor into a person having diabetes.
 
 ## Transformations
 
-Based on the features selected in the previous section, we decided to focus on discovering transformations that would improve the predictive power of the model. After investigating the distributions of each variable and various interaction terms, 2 transformations and an interaction term were ultimately added to the final model. 
+Based on the features selected in the previous section, we decided to focus on discovering transformations that would improve the predictive power of the model. After investigating the distributions of each variable and various interaction terms, 2 transformations and an interaction term were ultimately added to the final model.
 
-Firstly, we transformed the BMI feature by first logging and standardizing the data. Originally, the BMI data is right skewed. However, after the aforementioned transformations, the data became a lot more normalized which led to a significant increase in the model's predictive power. 
+Firstly, we transformed the BMI feature by first logging and standardizing the data. Originally, the BMI data is right skewed. However, after the aforementioned transformations, the data became a lot more normalized which led to a significant increase in the model's predictive power.
 
 ::: {#fig-new-bmi-hist}
 ![Distribution of Standardized log(BMI)](figures/combined_bmi_histogram.png)
 :::
 
-Furthermore, age was also transformed. In our baseline model, we noticed that each level of age had a weak p-value associated with it. However, we collapsed age from 13 ordinal categories to just 3. The p-values associated with each value made the coefficients statistically significant and helped increase the model's overall predictive accuracy. We experimented collapsing other features that had numerous categories, however, none of them yielded an improvement on the models accuracy. 
-
-
+Furthermore, age was also transformed. In our baseline model, we noticed that each level of age had a weak p-value associated with it. However, we collapsed age from 13 ordinal categories to just 3. The p-values associated with each value made the coefficients statistically significant and helped increase the model's overall predictive accuracy. We experimented collapsing other features that had numerous categories, however, none of them yielded an improvement on the model's accuracy.
 
 ## Interaction Effects
 
-Within the chosen set of features, there could be a case made for many interaction terms to exist. For example, smoking directly causes higher blood pressure and cholesterol. Hence, these three variables should have interactions with each other. However, after looking at all subsets of models with different interaction terms, there was only one statistically significant interaction term which improved the model's prediction accuracy: \textit{High Cholesterol * High Blood Pressure}. 
+Within the chosen set of features, there could be a case made for many interaction terms to exist. For example, smoking directly causes higher blood pressure and cholesterol. Hence, these three variables should have interactions with each other. However, after looking at all subsets of models with different interaction terms, there was only one statistically significant interaction term which improved the model's prediction accuracy: \textit{High Cholesterol * High Blood Pressure}.
 
-From the case's perspective, this medically makes sense: higher cholesterol can lead to a build up of plaque in the arteries which directly leads to higher blood pressure. 
+From the case's perspective, this medically makes sense: higher cholesterol can lead to a build up of plaque in the arteries which directly leads to higher blood pressure.
 
 ## Modeling Approach
 
