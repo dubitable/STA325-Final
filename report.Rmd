@@ -44,8 +44,6 @@ diabetes_raw <- read.csv("data/diabetes_012_health_indicators_BRFSS2015.csv")
 diabetes <- cleandata(diabetes_raw)
 ```
 
-(Make sure to label figures numerically with descriptive captions)
-
 ## Data Description
 
 The dataset used in this analysis contains 253,680 survey responses with 21 health-related features. These features represent participants’ answers to behavioral and medical questions, along with derived indicators of overall health status. Most binary variables follow a consistent coding scheme in which 1 indicates “yes” and 0 indicates “no.” Similarly, the variable Sex is encoded with 0 representing male and 1 representing female.
@@ -136,27 +134,27 @@ By using a cumulative logit model, we assume proportional odds. To verify this, 
 
 ## Prediction
 
-```{r fig.cap = "Cumulative Logit Model Confusion Matrix", message=FALSE, warning=FALSE, echo=FALSE, fig.height=2.7, fig.width=5, fig.pos='!H'}
+```{r fig.cap = "Cumulative Logit Model Confusion Matrix", message=FALSE, warning=FALSE, echo=FALSE, fig.height=2.2, fig.width=5, fig.pos='!H'}
 results_plot()
 ```
 
 The model shows an overall sensitivity of about 0.50 and a specificity of about 0.81 across classes, indicating it is more effective at correctly identifying negatives than positives. It is highly specific for nodiabetes (93%), meaning few false positives, but sensitivity is moderate (48%), so many true nodiabetes cases are upgraded to prediabetes or diabetes. For prediabetes, both sensitivity (29%) and specificity (75%) are low, showing the model struggles to detect this class accurately. For diabetes, sensitivity is relatively strong at 74% (the model correctly identifies most diabetic cases) but specificity (74%) is moderate, suggesting a fair number of false positives.
 
-These results are far from perfect but are extremely encouraging. Importantly, false negatives (predicting NoDiabetes when an individual actually has diabetes) are rare, indicating strong performance in distinguishing the most severe category. The model tends to err conservatively by predicting higher‑risk categories (prediabetes or diabetes) rather than underestimating risk, which we believe is beneficial from a public health perspective, as it identifies individuals potentially “trending” toward diabetes. Furthermore, a condition like prediabetes is naturally difficult to differentiate from both no diabetes and diabetes, hence the model's struggles there.
+These results are far from perfect but are extremely encouraging. Importantly, false negatives (predicting NoDiabetes when an individual actually has diabetes) are rare, indicating strong performance in distinguishing the most severe category. The model tends to err conservatively by predicting higher‑risk categories (prediabetes or diabetes) rather than underestimating risk, which we believe is beneficial from a public health perspective, as it identifies individuals potentially “trending” toward diabetes. 
 
-As discussed later, we explored several alternative models to improve predictive power but achieved only minimal accuracy gains, reinforcing our emphasis on interpretability over predictive performance. We cannot be fully accurate by just using survey results to predict a medical condition that requires testing, but we can identify important risk factors.
+As discussed later, we explored several other models to improve predictive power but achieved only minimal gains, reinforcing our emphasis on interpretability over predictive performance. We cannot be fully accurate by just using survey results to predict a medical condition that requires testing, but we can identify important risk factors.
 
 ## Interpretation
 
 The main benefit of our cumulative logit models is interpretability: we are able to reconstruct the predicted probability of diabetes risk as different predictors change, which is immensely valuable to identify the main sources of risk for diabetes. Since we have 11 predictors, it's difficult to visualize each effect individually, so we set baselines of "healthy" or "unhealthy" individuals and vary one or two variables at a time.
 
-```{r fig.cap = "Probability of Diabetes Risk Across Age and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=3, fig.width=8, fig.pos='!H'}
+```{r fig.cap = "Probability of Diabetes Risk Across Age and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=2.3, fig.width=8, fig.pos='!H'}
 age_plot()
 ```
 
 Above, we take the baseline of an unhealthy individual (someone with high cholesterol who doesn't exercise much) and plot our model's predicted probability of diabetes risk against the individual's BMI and age group. Strikingly, the distribution shifts left as age increases, showing that older individuals are more at risk of diabetes than a younger one of the same BMI.
 
-```{r fig.cap = "Probability of Diabetes Risk Across Sex and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=3, fig.width=6, fig.pos='!H'}
+```{r fig.cap = "Probability of Diabetes Risk Across Sex and BMI", message=FALSE, warning=FALSE, echo=FALSE, fig.height=2.5, fig.width=6, fig.pos='!H'}
 sex_plot()
 ```
 
