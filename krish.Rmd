@@ -65,14 +65,40 @@ ggplot(df, aes(x = factor(Stroke))) +
 
 
 ggplot(df, aes(x = BMI)) +
-  geom_histogram(bins = 40, fill = "steelblue", alpha = 0.7) +
-  geom_density(color = "red", linewidth = 1) +
+  geom_histogram(bins = 40, fill = "steelblue", alpha = 0.7)  +
   theme_minimal() +
-  labs(title = "BMI", x = "BMI", y = "Count")
+  labs(title = "Distribution of BMI", x = "BMI", y = "Count")
 
 
 
 ```
+
+```{r}
+
+library(ggplot2)
+
+p_bmi <- ggplot(df, aes(x = BMI)) +
+  geom_histogram(bins = 40, fill = "steelblue", alpha = 0.7) +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Distribution of BMI",
+    x = "BMI",
+    y = "Count"
+  )
+
+ggsave(
+  filename = "figures/bmi_histogram.png",
+  plot = p_bmi,
+  width = 5,
+  height = 3,
+  dpi = 300
+)
+
+
+
+```
+
+
 
 ```{r}
 
@@ -378,6 +404,38 @@ model_formula <- Diabetes_012 ~
 
 
 ```
+
+```{r}
+
+new_bmi <- ggplot(df, aes(x = df$logBMI_c)) +
+  geom_histogram(bins = 40, fill = "steelblue", alpha = 0.7)  +
+  theme_minimal() +
+  labs(title = "Distribution of standardized log(BMI) ", x = "Standardized log(BMI)", y = "Count")
+
+
+```
+
+```{r}
+
+ggsave(
+  filename = "figures/combined_bmi_histogram.png",
+  plot = bmi_graphs,
+  width = 7,
+  height = 4,
+  dpi = 300
+)
+
+```
+
+
+```{r}
+bmi_graphs <-  p_bmi / new_bmi
+
+bmi_graphs
+
+
+```
+
 
 ```{r}
 
