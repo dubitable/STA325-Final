@@ -166,7 +166,7 @@ Above, we take the baseline of an unhealthy individual (someone with high choles
 sex_plot()
 ```
 
-As seen above, some predictors aren't as interactive—the probability distributions look generally the same for males and females of similar health status. Our model then indicates that a female individual generally has about the same risk as a male individual with an equivalent BMI. However, this does not mean that sex is a poor predictor, but rather that it contributes to more substantial variation in other predictive factors.
+As seen above, some predictors aren't as interactive. For instance, the probability distributions look generally the same for males and females of similar health status. Our model then indicates that a female individual generally has about the same risk as a male individual with an equivalent BMI. However, this does not mean that sex is a poor predictor, but rather that it contributes to more substantial variation in other predictive factors.
 
 ## Short-Form Screening Tool
 
