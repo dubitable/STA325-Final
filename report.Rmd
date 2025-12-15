@@ -104,6 +104,14 @@ Firstly, we transformed the BMI feature by first logging and standardizing the d
 
 Furthermore, age was also transformed. In our baseline model, we noticed that each level of age had a weak p-value associated with it. However, we collapsed age from 13 ordinal categories to just 3. The p-values associated with each value made the coefficients statistically significant and helped increase the model's overall predictive accuracy. We experimented collapsing other features that had numerous categories, however, none of them yielded an improvement on the model's accuracy.
 
+## Thresholding
+
+Additionally, the method with which we measured accuracy was not simply predictive accuracy: we optimized our thresholds for the model as the purpose of our model is to not minimize false positives, but false negatives instead as misdiagnosing a patient who actually has diabetes is more costly.
+
+::: {#fig-roc-curves}
+![OVA ROC Curves for Fitted Cumulative Logistic Model](figures/roc.png)
+:::
+
 ## Interaction Effects
 
 Within the chosen set of features, there could be a case made for many interaction terms to exist. For example, smoking directly causes higher blood pressure and cholesterol. Hence, these three variables should have interactions with each other. However, after looking at all subsets of models with different interaction terms, there was only one statistically significant interaction term which improved the model's prediction accuracy: \textit{High Cholesterol * High Blood Pressure}.
