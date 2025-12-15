@@ -178,6 +178,39 @@ sex_plot <- function() {
     facet_grid(rows = vars(Baseline), cols = vars(Sex))
 }
 
+coef_plot <- function(model) {
+  sm <- summary(model)
+  coefs <- sm$coefficients
+  coefs <- coefs[!grepl("\\|", rownames(coefs)), ]  # drop cutpoints
+  est <- coefs[, "Value"]
+  se <- coefs[, "Std. Error"]
+  ci_lower <- est - 1.96 * se
+  ci_upper <- est + 1.96 * se
+  pval <- 2 * (1 - pnorm(abs(est / se)))
+  
+  df <- data.frame(
+    variable = rownames(coefs),
+    estimate = exp(est),
+    lower = exp(ci_lower),
+    upper = exp(ci_upper),
+    sig = pval < 0.05
+  )
+  
+  ggplot(df, aes(y = reorder(variable, estimate), x = estimate, color = sig)) +
+    geom_point(size = 3) +
+    geom_errorbar(aes(xmin = lower, xmax = upper), width = 0.2) +
+    geom_vline(xintercept = 1, linetype = "dashed", color = "black") +
+    scale_x_log10(labels = scales::number_format(accuracy = 0.1)) +
+    labs(
+      y = NULL,
+      x = "Odds Ratio (log scale)",
+      title = "Adjusted Odds Ratios for Predictors of Diabetes Severity",
+      color = "p < 0.05"
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(legend.position = "top")
+}
+
 get_probsbpchol <- function(model, df_new) {
   df_new$logBMI_c <- (log(40) - mean(log(diabetes$BMI))) / sd(log(diabetes$BMI))
   df_new <- df_new[rep(1, 2), , drop = FALSE]

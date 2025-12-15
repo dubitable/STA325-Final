@@ -168,6 +168,19 @@ sex_plot()
 
 As seen above, some predictors aren't as interactive. For instance, the probability distributions look generally the same for males and females of similar health status. Our model then indicates that a female individual generally has about the same risk as a male individual with an equivalent BMI. However, this does not mean that sex is a poor predictor, but rather that it contributes to more substantial variation in other predictive factors.
 
+While these plots highlight how age, sex, and BMI interact to shape the probability of diabetes risk, they only show a subset of the predictors in the model. To better understand which factors contribute most strongly to diabetes severity overall, we next examine the adjusted odds ratios from the cumulative logit model.
+
+Figure 8 presents adjusted odds ratios from the cumulative logit model, with 95% confidence intervals on a logarithmic scale. Each point shows how a given predictor is associated with higher levels of diabetes severity while holding other variables constant. Points to the right of the 1.0 threshold indicate greater odds of more severe diabetes, while those to the left indicate lower odds. Predictors shown in blue are statistically significant at the 5% level, while red points are not.
+
+```{r fig.cap = "Odds Ratios from the Final Cumulative Logit Model", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8, fig.pos='!H'}
+
+coef_plot(model_polr)
+```
+
+Overall, self-reported general health shows the strongest association with diabetes status. Respondents who rated their health as fair or poor have substantially higher odds of being diabetic compared to those reporting excellent health. Age and BMI also have strong positive effects, meaning that older adults and individuals with higher body mass index are much more likely to fall into more severe diabetes categories. High blood pressure and high cholesterol are also significant predictors, both increasing the odds of diabetes, which is consistent with well-known metabolic and cardiovascular risk patterns.
+
+Some variables show weaker or nonsignificant effects once other factors are controlled for. For example, smoking status, sex, and healthcare coverage have odds ratios close to one, suggesting smaller independent associations. The interaction between high blood pressure and high cholesterol exhibits a small but meaningful increase in odds, indicating that these conditions jointly elevate risk beyond their individual effects. In contrast, heavy alcohol consumption appears slightly protective, which may reflect residual confounding rather than a true clinical relationship.
+
 ## Short-Form Screening Tool
 
 In our project, we aimed to identify the factors associated with diabetes and narrow down the dataset we used into a short-form screening tool to quickly and effectively identify those at risk. The original survey from the CDC contained 330 features, which were reduced to 21 cleaned features in the dataset. Our survey developed from our final model now only includes 11 questions.
