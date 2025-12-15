@@ -80,13 +80,13 @@ After building intuition for the underlying feature distributions, our group exp
 
 ## Feature Selection
 
-The cleaned data set includes 21 feature variables. Many of these variables are highly correlated (eg. fruit consumption vs vegetable consumption), which can lead to multicollinearity. Hence, we first performed Ordinal Lasso Regression. We chose Lasso over Ridge regression because the coefficients of many of the feature variables were already extremely low/close to 0 in our baseline model: hence, Lasso would allow the coefficients to actually go to 0 - allowing us to make clearer choices on which features to select.
+The cleaned data set includes 21 feature variables. Many of these variables are highly correlated (eg. fruit consumption vs vegetable consumption), which can lead to multicollinearity. Hence, we first performed Ordinal Lasso Regression. We chose Lasso over Ridge regression because the coefficients of many of the feature variables were already extremely low/close to zero in our baseline model. Thus, by allowing the coefficients to actually go to zero, Lasso allowed us to make clearer choices on which features to select.
 
 ::: {#fig-lasso-coefs}
 ![Key predictors of diabetes severity estimated using an ordinal logistic regression model with LASSO regularization.](figures/lasso_coefficients.png)
 :::
 
-We also noted which coefficients had a sign change in order to see what direct coefficients of certain features were heading towards. Using the selected features, we were still left wih 15 candidate features. To further reduce our feature space, we performed stepwise selection criteria using BIC. We used BIC as our criteria because it penalizes larger feature models a lot more than other criteria (eg. AIC), hence resulting in a smaller feature set. The final feature set includes:
+We also noted which coefficients had a sign change in order to see what direct coefficients of certain features were heading towards. Using the selected features, we were still left with 15 candidate features. To further reduce our feature space, we performed stepwise selection criteria using BIC. We used BIC as our criteria because it penalizes larger feature models a lot more than other criteria (eg. AIC), hence resulting in a smaller feature set. The final feature set includes:
 
 \textit{BMI, Age, HighBP,  HighChol, Smoker, Stroke, HeartDiseaseorAttack, HvyAlcoholConsump, AnyHealthcare, NoDocbcCost, GenHlth, DiffWalk, Sex, Income}
 
@@ -94,19 +94,19 @@ In addition to the statistical evidence for using these variables, these variabl
 
 ## Transformations
 
-Based on the features selected in the previous section, we decided to focus on discovering transformations that would improve the predictive power of the model. After investigating the distributions of each variable and various interaction terms, 2 transformations and an interaction term were ultimately added to the final model.
+Based on the features selected in the previous section, we decided to focus on discovering transformations that would improve the predictive power of the model. After investigating the distributions of each variable and various interaction terms, two transformations and an interaction term were ultimately added to the final model.
 
-Firstly, we transformed the BMI feature by first logging and standardizing the data. Originally, the BMI data is right skewed. However, after the aforementioned transformations, the data became a lot more normalized which led to a significant increase in the model's predictive power.
+After performing downsampling to balance the data, we transformed the BMI predictor by applying a logarithmic transformation and then standardizing the variable. This was done because the original BMI distribution was right-skewed (see Figure 3), both before and after randomized downsampling. However, after the aforementioned transformations, the data became a lot more normalized which led to a significant increase in the final model's predictive power.
 
 ::: {#fig-new-bmi-hist}
 ![Distribution of Standardized log(BMI)](figures/combined_bmi_histogram.png)
 :::
 
-Furthermore, age was also transformed. In our baseline model, we noticed that each level of age had a weak p-value associated with it. However, we collapsed age from 13 ordinal categories to just 3. The p-values associated with each value made the coefficients statistically significant and helped increase the model's overall predictive accuracy. We experimented collapsing other features that had numerous categories, however, none of them yielded an improvement on the model's accuracy.
+Furthermore, the age feature was also transformed. In our baseline model, we noticed that each level of age had a weak p-value associated with it. Due to this, we collapsed age from 13 ordinal categories down to just three. The p-values associated with each value made the coefficients statistically significant and helped increase the model's overall predictive accuracy. We experimented collapsing other features that had numerous categories, however, none of them yielded an improvement on the model's accuracy.
 
 ## Thresholding
 
-Additionally, the method with which we measured accuracy was not simply predictive accuracy: we optimized our thresholds for the model as the purpose of our model is to not minimize false positives, but false negatives instead as misdiagnosing a patient who actually has diabetes is more costly.
+Additionally, the method by which we measured accuracy was not based solely on overall predictive accuracy. Instead, we optimized the model’s classification thresholds to prioritize minimizing false negatives rather than false positives, since misdiagnosing a patient who actually has diabetes is more costly.
 
 ::: {#fig-roc-curves}
 ![OVA ROC Curves for Fitted Cumulative Logistic Model](figures/roc.png)
