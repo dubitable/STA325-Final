@@ -172,7 +172,7 @@ While these plots highlight how age, sex, and BMI interact to shape the probabil
 
 Figure 8 presents adjusted odds ratios from the final cumulative logit model, with 95% confidence intervals on a logarithmic scale. Each point shows how a given predictor’s coefficient is associated with higher levels of diabetes severity while holding other variables constant. Points to the right of the 1.0 threshold indicate greater odds of more severe diabetes, while those to the left indicate lower odds. Predictors shown in blue are statistically significant at the 5% level, while the red points are not.
 
-```{r fig.cap = "Odds Ratios from the Final Cumulative Logit Model", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=8, fig.pos='!H'}
+```{r fig.cap= "Odds Ratios from the Final Cumulative Logit Model", message=FALSE, warning=FALSE, echo=FALSE, fig.height=4.5, fig.width=8, fig.pos='H', out.width='90%', fig.align='center'}
 
 coef_plot(model_polr)
 ```
