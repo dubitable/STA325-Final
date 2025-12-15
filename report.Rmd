@@ -128,8 +128,6 @@ polr(Diabetes_012 \~ log_centered(BMI) + Age_3 + HighBP, + HighChol + Smoker + S
 
 This modeling framework balances predictive performance with interpretability, making it well suited for understanding how health behaviors and indicators jointly influence diabetes risk across different levels of severity.
 
-\newpage
-
 # Results
 
 ## Model Assumptions
@@ -177,8 +175,6 @@ In our project, we aimed to identify the factors associated with diabetes and na
 -   **Economic Status** (Health Care Coverage, Refusal of Treatment Due to Cost, Income Level). Our study has revealed an unfortunate truth about diabetes risk as well: likely due to early signs morphing into diabetes in the absence of proper treatment. This observation should spur change amongst policymakers such that cost is not prohibitive to proper diabetes care.
 
 By focusing on immutable traits, health history, habits, and economic factors, the final model provides a balanced assessment of diabetes risk while remaining practical for real-world application. This simplified, 11-question survey can aid early identification and prevention efforts, guiding both individuals and healthcare providers toward timely interventions and encouraging broader public health and policy actions to reduce diabetes incidence.
-
-\newpage
 
 # Aside: Black Box Models
 
