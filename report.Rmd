@@ -108,9 +108,15 @@ Furthermore, the age feature was also transformed. In our baseline model, we not
 
 Additionally, the method by which we measured accuracy was not based solely on overall predictive accuracy. Instead, we optimized the model’s classification thresholds to prioritize minimizing false negatives rather than false positives, since misdiagnosing a patient who actually has diabetes is more costly.
 
+To evaluate classification performance in a threshold-dependent manner, we adopted a one-vs-rest framework. For each class, predicted probabilities were treated as binary scores by comparing the probability of belonging to that class against the probabilities of all other classes combined. This allowed us to construct ROC curves for each outcome category independently, despite the underlying ordinal structure of the model. The resulting curves in Figure 4 illustrate the trade-off between true positive rate (sensitivity) and false positive rate across all possible probability thresholds.
+
 ::: {#fig-roc-curves}
 ![OVA ROC Curves for Fitted Cumulative Logistic Model](figures/roc.png)
 :::
+
+Figure 4 presents one-vs-rest (OvR) ROC curves derived from the fitted cumulative logistic (ordinal) regression model. Because the outcome variable is ordinal with three ordered categories (No Diabetes, Pre-Diabetes, and Diabetes), the model was first fit using cumulative logit link functions, which estimate category probabilities through a series of monotonic cutpoints. Importantly, no thresholding decisions are made during model fitting. Instead, threshold selection was performed after the model has been trained and class probabilities have been estimated.
+
+Once the final model was selected, threshold-dependent metrics (including one-vs-all ROC curves, precision, recall, and F1 score) were used to identify an operating point that aligned with our research objective. In this study, we optimized the model’s classification thresholds to prioritize minimizing false negatives rather than false positives, since misdiagnosing a patient who actually has diabetes is more costly than incorrectly flagging a healthy patient. Consequently, probability cutoffs were selected to favor higher sensitivity, even at the expense of increased false positives.
 
 ## Interaction Effects
 

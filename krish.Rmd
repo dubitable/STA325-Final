@@ -98,8 +98,6 @@ ggsave(
 
 ```
 
-
-
 ```{r}
 
 ggplot(df, aes(x = MentHlth)) +
@@ -241,7 +239,6 @@ ggsave(
 
 
 ```
-
 
 ```{r}
 
@@ -427,7 +424,6 @@ ggsave(
 
 ```
 
-
 ```{r}
 bmi_graphs <-  p_bmi / new_bmi
 
@@ -435,7 +431,6 @@ bmi_graphs
 
 
 ```
-
 
 ```{r}
 
@@ -459,15 +454,12 @@ new_age <- ggplot(df, aes(x = factor(Age3))) +
 
 ```
 
-
 ```{r}
 
 age_trans <- ape_p / new_age
 
 
 ```
-
-
 
 ```{r}
 
