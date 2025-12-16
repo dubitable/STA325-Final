@@ -98,7 +98,7 @@ From the case's perspective, this medically makes sense: higher cholesterol can 
 
 ## Transformations
 
-Based on the features selected in the previous section, we decided to focus on discovering transformations that would improve the predictive power of the model. After investigating the distributions of each variable and various interaction terms, two transformations and an interaction term were ultimately added to the final model.
+Based on the features selected in the previous section, we decided to focus on discovering transformations that would improve the predictive power of the model. After investigating the distributions of each variable and various interaction terms, two transformations were ultimately added to the final model.
 
 After performing downsampling to balance the data, we transformed the BMI predictor by applying a logarithmic transformation and then standardizing the variable. This was done because the original BMI distribution was right-skewed (see Figure 3), both before and after randomized downsampling. However, after the aforementioned transformations, the data became a lot more normalized which led to a significant increase in the final model's predictive power.
 
