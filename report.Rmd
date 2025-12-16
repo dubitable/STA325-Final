@@ -110,7 +110,7 @@ Furthermore, the age feature was also transformed. In our baseline model, we not
 
 ## Thresholding
 
-Additionally, the method by which we measured accuracy was not based solely on overall predictive accuracy. Instead, we optimized the model’s classification thresholds to prioritize minimizing false negatives rather than false positives, since misdiagnosing a patient who actually has diabetes is more costly.
+Additionally, the method by which we measured accuracy was not based solely on overall predictive accuracy. Instead, we optimized the model’s classification thresholds to prioritize minimizing false negatives.
 
 To evaluate classification performance in a threshold-dependent manner, we adopted a one-vs-rest framework. For each class, predicted probabilities were treated as binary scores by comparing the probability of belonging to that class against the probabilities of all other classes combined. This allowed us to construct ROC curves for each outcome category independently, despite the underlying ordinal structure of the model. The resulting curves in Figure 4 illustrate the trade-off between true positive rate (sensitivity) and false positive rate across all possible probability thresholds.
 
